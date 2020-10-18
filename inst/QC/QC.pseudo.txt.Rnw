@@ -1,0 +1,6 @@
+ Chip pseudo-images are used to detect artifacts on arrays that could pose potential quality problems 
+ such as e.g. bubbles or scratches on the chip. \\
+
+ On the following page(s) the pseudo-images for all @NUMTREES@ CEL-files will be displayed, using
+ option 'weights'. \\
+

@@ -1,0 +1,39 @@
+Package: xps
+Version: 1.49.1
+Title: Processing and Analysis of Affymetrix Oligonucleotide Arrays
+        including Exon Arrays, Whole Genome Arrays and Plate Arrays
+Author: Christian Stratowa, Vienna, Austria
+Maintainer: Christian Stratowa <cstrato@aon.at>
+Depends: R (>= 2.6.0), methods, utils
+Suggests: tools
+Description: The package handles pre-processing, normalization, filtering
+      and analysis of Affymetrix GeneChip expression arrays, including exon 
+      arrays (Exon 1.0 ST: core, extended, full probesets), gene arrays (Gene 1.0 ST)
+      and plate arrays on computers with 1 GB RAM only. It imports Affymetrix 
+      .CDF, .CLF, .PGF and .CEL as well as annotation files, and computes e.g. RMA, 
+      MAS5, FARMS, DFW, FIRMA, tRMA, MAS5-calls, DABG-calls, I/NI-calls. It is an R wrapper to 
+      XPS (eXpression Profiling System), which is based on ROOT, an object-oriented 
+      framework developed at CERN. Thus, the prior installation of ROOT is a prerequisite
+      for the usage of this package, however, no knowledge of ROOT is required.
+      ROOT is licensed under LGPL and can be downloaded from http://root.cern.ch.
+License: GPL (>= 2.0)
+Collate: utils.R TreeSetClasses.R methods.ProjectInfo.R
+        methods.Filter.R methods.PreFilter.R methods.UniFilter.R
+        methods.TreeSet.R methods.SchemeTreeSet.R methods.ProcesSet.R
+        methods.DataTreeSet.R methods.ExprTreeSet.R
+        methods.CallTreeSet.R methods.QualTreeSet.R
+        methods.FilterTreeSet.R methods.AnalysisTreeSet.R
+        Constructors.R import.R export.R root.files.R rma.R mas4.R
+        mas5.R mas5.call.R dabg.call.R dfw.R farms.R ini.call.R firma.R
+        trma.R bgcorrect.R normalize.R summarize.R express.R fitQC.R
+        qualify.R AffyRNAdeg.R filter.R plot.R root.graphics.R
+        xpsQAReport.R zzz.R
+biocViews: ExonArray, GeneExpression, Microarray, OneChannel,
+        DataImport, Preprocessing, Transcription,
+        DifferentialExpression
+LazyLoad: yes
+SystemRequirements: GNU make, root_v5.34.36 <http://root.cern.ch> - See
+        README file for installation instructions.
+NeedsCompilation: yes
+Packaged: 2016-10-17 22:22:36 UTC; biocbuild
+PackageStatus: Deprecated

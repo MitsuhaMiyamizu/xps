@@ -1,0 +1,13 @@
+\section{Quality control for detection calls}
+
+ The quality metrics in this section is based on the detection call algorithm '@DETCALL@'. \\
+
+ The percentage of genes considered to be present/marginal/absent for each array is:
+
+<<echo=FALSE>>=
+read.delim("PrecentCall.txt", row.names=1, comment.char="", stringsAsFactors=F)
+@ 
+
+ The percentage of 'present' genes should be similar for all arrays, or at least similar for 
+ all replicas and/or for arrays belonging to the same group. Arrays showing a low percentage of 
+ 'present' genes could hint at bad hybridizations. 

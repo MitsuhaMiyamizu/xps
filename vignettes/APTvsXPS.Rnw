@@ -1,0 +1,1097 @@
+%\VignetteIndexEntry{3. XPS Vignette: Comparison APT vs XPS}
+%\VignetteDepends{xps}
+%\VignetteKeywords{Expression, Affymetrix, Oligonucleotide Arrays}
+%\VignettePackage{xps}
+\documentclass{article}
+
+\usepackage{hyperref}
+\usepackage[authoryear,round]{natbib}
+
+\textwidth=6.2in
+\textheight=8.5in
+%\parskip=.3cm
+\oddsidemargin=.1in
+\evensidemargin=.1in
+\headheight=-.3in
+
+\newcommand{\Rfunction}[1]{{\texttt{#1}}}
+\newcommand{\Rmethod}[1]{{\texttt{#1}}}
+\newcommand{\Rcode}[1]{{\texttt{#1}}}
+\newcommand{\Robject}[1]{{\texttt{#1}}}
+\newcommand{\Rpackage}[1]{{\textsf{#1}}}
+\newcommand{\Rclass}[1]{{\textit{#1}}}
+\newcommand{\xps}{\Rpackage{xps}}
+\newcommand{\ROOT}{\Robject{ROOT}}
+
+\begin{document}
+
+\title{Introduction to the xps Package: Comparison to Affymetrix Power Tools (APT)}
+\date{April, 2010}
+\author{Christian Stratowa}
+\maketitle
+
+\tableofcontents
+
+\section{Introduction}
+
+The aim of this document is to compare the results obtained with package \xps\ to the results
+obtained with Affymetrix Power Tools (APT version apt-1.10.2). For this purpose the Exon Array Data 
+Set "Tissue Mixture" will be used, which can be downloaded from the Affymetrix web-site for 
+expression arrays "Human Genome U133 Plus 2.0", "Human Gene 1.0 ST" and "Human Exon 1.0 ST", 
+respectively. First, APT and \xps\ will be compared for each array type seperately, then the 
+results obtained with the different arrays will be compared to each other for both APT and \xps.
+To speed up analysis only two human tissues will be used, namely breast and prostate.
+
+For analyzing expression arrays, including gene and exon arrays, APT contains the command-line 
+program \Robject{apt-probeset-summarize}, which supports background correction (RMA, MAS5), 
+normalization (linear scaling, quantile, sketch), and summarization (RMA, MAS5, PLIER) methods. \\
+
+{\bf Note:} In order to keep this document short, only example code will be presented here, 
+the full source code is available in files "script4xps2apt.R" and "script4bestmatch.R" located 
+in directory "xps/examples". 
+
+
+\section{Comparison of results for the Human Genome U133 Plus 2.0 Array}
+
+\subsection{Comparison of different implementations of RMA summarization}
+
+When doing RMA summarization with \Robject{apt-probeset-summarize}, sketch-quantile normalization
+(using only a subset of data) is applied by default in order to decrease memory consumption.
+Furthermore, the Affymetrix GUI application "Expression Console" can only use sketch-quantile 
+normalization. For this reason let us first compare RMA using sketch-quantile vs quantile 
+normalization.
+
+The following command will compute RMA using sketch-quantile normalization:
+
+\begin{verbatim}
+apt-probeset-summarize -a rma-bg,quant-norm.sketch=-1.usepm=true.bioc=true, \
+    pm-only,med-polish.expon=true -d HG-U133_Plus_2.cdf *.CEL}
+\end{verbatim}
+
+Note that all CEL-files and the corresponding CDF-file must be located in the current directory.
+
+The output can be directly imported into R:
+
+%<<eval=FALSE, keep.source=TRUE>>=
+<<eval=FALSE>>=
+apt.rma.sk <- read.delim("rma-bg.quant-norm.pm-only.med-polish.summary.txt", row.names=1, comment.char="", skip=52)
+@
+
+To compute RMA using full quantile normalization the following command is used:
+
+\begin{verbatim}
+apt-probeset-summarize -a rma-bg,quant-norm.sketch=0.usepm=true.bioc=true, \
+    pm-only,med-polish.expon=true -d HG-U133_Plus_2.cdf *.CEL
+\end{verbatim}
+
+Again, the output can be directly imported into R:
+
+<<eval=FALSE>>=
+apt.rma <- read.delim("rma-bg.quant-norm.pm-only.med-polish.summary.txt", row.names=1, comment.char="", skip=52)
+@
+
+Please note that in both cases the name of the output file is the same. \\
+
+To compare the results, we will use "MvA-plots" in almost all cases. Thus we can plot:
+
+<<eval=FALSE>>=
+plot(log2(apt.rma[,1] * apt.rma.sk[,1])/2, log2(apt.rma.sk[,1]/apt.rma[,1]), main="APT: RMA vs RMA-sketch", xlab="A = Log2(SketchRMA*RMA)", ylab="M = Log2(SketchRMA/RMA)",log="",ylim=c(-0.1,0.1))
+@
+
+Since we use only the triplicate CEL-files for breast and prostate, respectively, column one of 
+the \Rfunction{data.frame}s \Robject{apt.rma.sk} and \Robject{apt.rma} show the normalized 
+expression values of tissue "breast\_A". \\
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=80mm]{U133P2_APT_RMA_RMAsketch_MvA.png}
+  \caption{APT RMA using quantile vs quantile-sketch.}
+  \label{sketch}
+\end{center}
+\end{figure}
+
+The resulting Figure \ref{sketch} shows that using sketch-quantile normalization gives a slightly
+different result, especially at low expression values. Thus, for all following comparisons we
+will use the full quantile normalization. \\
+
+{\bf Note:} One advantage of package \xps\ compared to APT is, that you can do RMA with full
+quantile normalization on computers with only 1GB RAM, even for exon arrays. \\
+
+\pagebreak
+
+Now let us compare APT and \xps. For this purpose we compute RMA as described in vignette 
+"xps.pdf", and extract \Rfunction{data.frame} \Robject{xps.rma} from \Rclass{data.rma}:
+
+<<eval=FALSE>>=
+data.rma <- rma(data.u133p2, "MixU133P2RMA", background="pmonly", normalize=TRUE)
+xps.rma  <- validData(data.rma)
+@
+
+Now we can compare the results obtained with APT and \xps\ for tissue "breast\_A" using 
+an "MvA-plot":
+
+<<eval=FALSE>>=
+plot(log2(apt.rma[,1] * xps.rma[,1])/2, log2(xps.rma[,1]/apt.rma[,1]), main="RMA: XPS vs APT", xlab="A = Log2(XPS*APT)", ylab="M = Log2(XPS/APT)",log="",ylim=c(-0.1,0.1))
+@
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=80mm]{U133P2_XPS_APT_RMA_MvA.png}
+  \caption{RMA computed with apt and xps, respectively.}
+  \label{rma133xpsapt}
+\end{center}
+\end{figure}
+
+As shown in Figure \ref{rma133xpsapt}, the results obtained with APT and \xps\ are identical. \\
+
+\pagebreak
+
+For the sake of completeness, let us compare both results to the results obtained with
+package \Rpackage{affy}. For this purpose we compute:
+
+<<eval=FALSE>>=
+affy.rma <- justRMA()
+affy.rma <- 2^exprs(affy.rma)
+@
+
+and plot:
+
+<<eval=FALSE>>=
+tmp <- cbind(xps.rma[,1],affy.rma[,1],apt.rma[,1])
+colnames(tmp) <- c("xps.rma","affy.rma","apt.rma")
+pairs(log2(tmp), labels=colnames(tmp))
+@
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=80mm]{U133P2_XPS_AFFY_APT_RMA.png}
+  \caption{RMA computed with xps, affy and apt, respectively.}
+  \label{rma133pairs}
+\end{center}
+\end{figure}
+
+As shown in Figure \ref{rma133pairs}, the results are identical in all three cases. 
+For example, the differences between \xps\ and APT or \Rpackage{affy} are less than 4e-6. \\
+
+\pagebreak
+
+
+\subsection{Comparison of different implementations of MAS 5.0 summarization}
+
+The command-line to compute MAS5 summarization using APT is:
+
+\begin{verbatim}
+apt-probeset-summarize -a mas5-bg,pm-mm,mas5-signal -d HG-U133_Plus_2.cdf *.CEL
+\end{verbatim}
+
+The output is imported into R and must be scaled to \Rcode{sc=500} since APT does not allow 
+for signal level normalization across the chip (as mentioned in APT FAQ):
+
+<<eval=FALSE>>=
+apt.mas5 <- read.delim("mas5-bg.pm-mm.mas5-signal.summary.txt", row.names=1, comment.char="", skip=52)
+apt.mas5 <- apply(apt.mas5, 2, function(x){x*(500/mean(x, trim=0.02))})
+@
+
+Now we compute MAS5 with \xps\ as described in vignette "xps.pdf":
+
+<<eval=FALSE>>=
+data.mas5 <- mas5(data.u133p2,"MixU133P2MAS5All", normalize=TRUE, sc=500, update=TRUE)
+xps.mas5 <- validData(data.mas5)
+@
+
+Finally, we compute MAS5 using package \Rpackage{affy}:
+
+<<eval=FALSE>>=
+affy <- ReadAffy()
+affy.mas5 <- mas5(affy, normalize=TRUE, sc=500)
+affy.mas5 <- exprs(affy.mas5)
+@
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=90mm]{U133P2_XPS_APT_EC_AFFY_MAS5_MvA_3x2.png}
+%  \includegraphics[scale=1]{U133P2_XPS_APT_EC_AFFY_MAS5_MvA_3x2.png}
+  \caption{MAS5 computed with xps, affy, apt and EC, respectively.}
+  \label{u133mas5}
+\end{center}
+\end{figure}
+
+Using "MvA-plots" to compare the MAS5 expression levels for sample "Breast\_A" we obtain
+the results shown in Figure \ref{u133mas5}. 
+
+The upper row shows how the implementation of the MAS5 algorithm in packages \xps\ and
+\Rpackage{affy} compare to APT. Both packages show clear differences to APT, especially
+at low expression levels. However, as APT FAQ mentions, "a new implementation of the MAS5 
+methods was necessary to get this method to work in the APT architecture". Thus, the middle
+row shows how  packages \xps\ and \Rpackage{affy} compare to the MAS5 results obtained with
+the Affymetrix "Expression Console", which has implemented MAS5 identical to GCOS. There are 
+still differences seen in the expression levels, with the \xps\ implementation of MAS5 being
+slightly more close to the GCOS implementation of MAS5. Finally, the lower row shows the
+differences between APT and GCOS, and between \xps\ and \Rpackage{affy}, respectively.
+
+\pagebreak
+
+
+\subsection{Comparison of different implementations of MAS 5.0 detection calls}
+
+Now let us compute MAS5 detection calls. The command-line for APT is:
+
+\begin{verbatim}
+apt-probeset-summarize -a pm-mm,mas5-detect.calls=1.pairs=1 -d HG-U133_Plus_2.cdf -x 10 *.CEL
+\end{verbatim}
+
+Using package \xps\, MAS5 detection calls are computed as follows:
+
+<<eval=FALSE>>=
+call.mas5 <- mas5.call(data.u133p2,"MixU133P2Call")
+xps.pval  <- validData(call.mas5)
+@
+
+while package \Rpackage{affy} uses the following commands:
+
+<<eval=FALSE>>=
+affy <- ReadAffy()
+affy.dc5  <- mas5calls(affy)
+affy.pval <- assayData(affy.dc5)[["se.exprs"]]
+@
+
+Figure \ref{u133mas5pvalpairs} compares the detection p-values obtained with packages 
+\xps\ and \Rpackage{affy}, as well as Expression Console and APT.
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=100mm]{U133P2_XPS_AFFY_EC_APT_MAS5_pval.png}
+  \caption{Comparison of p-values obtained with xps, affy, Expression Console and APT.}
+  \label{u133mas5pvalpairs}
+\end{center}
+\end{figure}
+
+While Expression Console and APT result in identical p-values, both \xps\ and \Rpackage{affy}
+differ from APT. However, as shown in Figure \ref{u133mas5pval}, the detection call p-values 
+obtained with  \xps\ and \Rpackage{affy} are identical. 
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=80mm]{U133P2_Diff_XPS_AFFY_MAS5_pval.png}
+  \caption{Difference between p-values obtained with xps and affy.}
+  \label{u133mas5pval}
+\end{center}
+\end{figure}
+
+\pagebreak
+
+
+\section{Comparison of results for the Human Gene 1.0 ST Array}
+
+\subsection{Comparison of the RMA summarization implementations}
+
+While the results for expression arrays obtained with \xps\ and APT, respectively, can be
+directly compared, since the probesets used are identical, comparison of \xps\ and APT with
+gene/exon arrays requires the definition of common probesets first. \\
+
+Let us first compute RMA using package \xps:
+
+<<eval=FALSE>>=
+data.rma.tc <- rma(data.genome,"MixHuGeneRMAcore_tc", background="antigenomic",
+                   normalize=TRUE, option="transcript", exonlevel="core")
+xps.rma.tc  <- validData(data.rma.tc)
+@
+
+Now we can create a file specifying the probesets to summarize for APT:
+
+<<eval=FALSE>>=
+tmp <- as.data.frame(rownames(xps.rma.tc))
+colnames(tmp) <- "probeset_id"
+write.table(tmp, "transcriptList.txt", quote=FALSE, row.names=FALSE)
+@
+
+This transcriptList contains now the probesets used by \xps\ and can be added  as option 
+when computing RMA using APT:
+
+\begin{verbatim}
+apt-probeset-summarize -a rma-bg,quant-norm.sketch=0.usepm=true.bioc=true, \
+    pm-only,med-polish.expon=true \
+    -p HuGene-1_0-st-v1.r3.pgf -c HuGene-1_0-st-v1.r3.clf \
+    -s transcriptList.txt *.CEL
+\end{verbatim}
+
+Figure \ref{generma} shows the resulting "MvA-plot" for tissue "breast\_A".
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=80mm]{HuGene_XPS_APT_RMA_MvA_tc_r4.png}
+  \caption{RMA computed with xps and apt, respectively.}
+  \label{generma}
+\end{center}
+\end{figure}
+
+\pagebreak
+
+As Figure \ref{generma} shows, there is clearly a difference of few percent in the expression 
+levels obtained when using \xps\ or APT, respectively, including a non-linearity at low expression 
+levels. \\
+
+In order to understand this difference let us first compare the "median-polish" summarization 
+step (w/o background correction and quantile normalization). 
+
+In package \xps\ this is done as follows:
+
+<<eval=FALSE>>=
+expr.mp.tc <- express(data.genome, "MixHuGeneMedPolcore_tc", summarize.method="medianpolish",
+              summarize.select="pmonly", summarize.option="transcript", summarize.logbase="log2",
+              summarize.params=c(10, 0.01, 1.0), exonlevel="core")
+xps.mp.tc <- validData(expr.mp.tc)
+@
+
+while APT uses the following command:
+
+\begin{verbatim}
+apt-probeset-summarize -a pm-only,med-polish.expon=true \
+   -p HuGene-1_0-st-v1.r3.pgf -c HuGene-1_0-st-v1.r3.clf \
+   -s transcriptList.txt *.CEL
+\end{verbatim}
+
+The resulting Figure \ref{genemp} shows that the results obtained with \xps\ and APT are 
+identical (the difference being less than 4e-6, see scale of y-axis).
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=80mm]{HuGene_XPS_APT_MedPol_MvA_tc_r4.png}
+  \caption{Median-polish only, computed with xps and apt, respectively.}
+  \label{genemp}
+\end{center}
+\end{figure}
+
+\pagebreak
+
+Since the results of median-polish are identical for \xps\ and APT, the differences seen in 
+Figure \ref{generma} are due to background correction and/or quantile normalization, respectively. 
+Package \xps\ uses only those probes to compute background and quantile normalization, which are 
+also used for summarization, as defined by parameter \Rcode{exonlevel}. The reason for this is 
+that RMA estimates the background from the PM probe intensities only, as described in 
+\citep{iriz:etal:2003}. Analogously, quantile normalization \citep{bols:etal:2003} is applied
+only to the probes which are used for summarization.
+
+It seems that APT uses (almost) all probes on the array for background correction and quantile 
+normalization. Since package \xps\ has an (unsupported) option to use (almost) all probes (which 
+include internal control probes and background probes), there is a possibility to use all probes 
+by setting parameter \Rcode{exonlevel} individually for background correction, quantile 
+normalization and median-polish summarization, respectively. This is done as follows:
+
+<<eval=FALSE>>=
+data.rma.tc.bq99 <- rma(data.genome, "HuGeneMixRMAbgqu99mp9", background="antigenomic",
+                         normalize=TRUE, exonlevel=c(992316,992316,9216))
+xps.rma.tc.bq99 <- validData(data.rma.tc.bq99)
+@
+
+Here, we have set \Rcode{exonlevel="core+affx+unmapped+exon+intron+antigenomic"} for background 
+correction and quantile normalization, respectively, and \Rcode{exonlevel="core"} for median-polish 
+summarization (see \Rcode{?exonLevel}). Comparing the results of this setting to APT, we obtain 
+the following "MvA-plot" for tissue "breast\_A", see Figure \ref{genermabq99}.
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=80mm]{HuGene_XPS_APT_RMA_bg99qu99_MvA_tc_r4.png}
+  \caption{RMA, computed with xps and apt, respectively.}
+  \label{genermabq99}
+\end{center}
+\end{figure}
+
+\pagebreak
+
+As Figure \ref{genermabq99} shows, the expression levels obtained when using \xps\ or APT, 
+respectively, are now identical, indicating that APT does indeed use all probes on the array 
+for background correction and quantile normalization (exluding only the probes hybridizing 
+to the control oligo). \\
+
+
+\subsection{Comparison of the DABG call implementations}
+
+Now let us compute the detected above background (DABG) calls. The command-line for APT is:
+
+\begin{verbatim}
+apt-probeset-summarize -a dabg \
+   -p HuGene-1_0-st-v1.r3.pgf -c HuGene-1_0-st-v1.r3.clf \
+   -b HuGene-1_0-st-v1.r3.bgp -s probesetList.txt  -x 8 *.CEL
+\end{verbatim}
+
+Using package \xps\, DABG calls are computed as follows:
+
+<<eval=FALSE>>=
+call.dabg.tc <- dabg.call(data.genome, "HuGeneMixDABGcore_tc", 
+                          option="transcript", exonlevel="core")
+xps.pval.tc <- validData(call.dabg.tc)
+@
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=80mm]{HuGeneDiff_XPS_APT_DABG_pval_tc_r4.png}
+  \caption{Comparison of p-values obtained with xps and APT.}
+  \label{genedabgpval}
+\end{center}
+\end{figure}
+
+Figure \ref{genedabgpval} shows the difference in the detection p-values obtained with \xps\ 
+and APT, respectively. The detection p-values are identical (the minor apparent difference 
+only due to different numbers of digits exported). \\
+
+
+\pagebreak
+
+\subsection{Comparison of results when using HuGene as exon array}
+
+With release r4 of the library files Affymetrix has converted the HuGene-1\_0-st-v1 array into 
+an exon array. While the probes for "HuGene-1\_0-st-v1.r3.pgf" were grouped according to the 
+\Rcode{transcript\_cluster\_id}s, the probes for "HuGene-1\_0-st-v1.r4.pgf" are grouped according 
+to the \Rcode{probeset\_id}s of the new probeset annotation file.
+
+Thus in order to compare \xps\ and APT at the transcript level it is now necessary to create 
+the transcript probesets for APT using function \Rcode{metaProbesets()}:
+
+<<eval=FALSE>>=
+writeLines(rownames(xps.rma.tc), "core.txt")
+metaProbesets(scheme.genome, "core.txt", "coreList.mps", "core")
+@
+
+Now we need to use this 'coreList.mps' file to compute RMA and DABG, respectively, at the 
+transcript level using APT, e.g. we compute RMA as follows:
+
+\begin{verbatim}
+apt-probeset-summarize -a rma-bg,quant-norm.sketch=0.usepm=true.bioc=true, \
+    pm-only,med-polish.expon=true \
+    -p HuGene-1_0-st-v1.r4.pgf -c HuGene-1_0-st-v1.r4.clf \
+    -m coreList.mps *.CEL
+\end{verbatim}
+
+The results for RMA and DABG are identical to the results obtained with release r3 of the 
+library files shown above. \\
+
+In addition to the transcript level release r4 allows now to compute both RMA and DABG on the 
+probeset level as well, analogously to the exon arrays. For this purpose we compute first RMA 
+at the probeset level using package \xps:
+
+<<eval=FALSE>>=
+data.rma.ps <- rma(data.genome, "MixHuGeneRMAcore_ps", background="antigenomic",
+                   normalize=TRUE, option="probeset", exonlevel="core")
+xps.rma.ps  <- validData(data.rma.ps)
+@
+
+Then we create a file specifying the probesets to summarize for APT:
+
+<<eval=FALSE>>=
+tmp <- as.data.frame(rownames(xps.rma.ps))
+colnames(tmp) <- "probeset_id"
+write.table(tmp, "probesetList.txt", quote=FALSE, row.names=FALSE)
+@
+
+Finally we use this probesetList to compute RMA using APT:
+
+\begin{verbatim}
+apt-probeset-summarize -a rma-bg,quant-norm.sketch=0.usepm=true.bioc=true, \
+    pm-only,med-polish.expon=true \
+    -p HuGene-1_0-st-v1.r4.pgf -c HuGene-1_0-st-v1.r4.clf \
+    -s probesetList.txt *.CEL
+\end{verbatim}
+
+The resulting figure \ref{probesetrma} shows once again a difference of few percent in the 
+expression levels obtained when using \xps\ or APT.
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=80mm]{HuGene_XPS_APT_RMA_MvA_ps_r4.png}
+  \caption{RMA for probesets computed with xps and apt, respectively.}
+  \label{probesetrma}
+\end{center}
+\end{figure}
+
+However, when using the same probes for background correction and quantile normalization as APT:
+
+<<eval=FALSE>>=
+data.rma.ps.bq99 <- rma(data.genome,"HuGeneMixRMAbgqu99mp9_ps", background="antigenomic",
+                        normalize=TRUE, option="probeset", exonlevel=c(992316,992316,9216))
+xps.rma.ps.bq99 <- validData(data.rma.ps.bq99)
+@
+
+the results are once again identical to the results obtained with APT, as shown in Figure 
+\ref{probeset99rma}.
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=80mm]{HuGene_XPS_APT_RMA_bg99qu99_MvA_ps_r4.png}
+  \caption{RMA for probesets computed with xps and apt, respectively.}
+  \label{probeset99rma}
+\end{center}
+\end{figure}
+
+\pagebreak
+
+
+\section{Comparison of results for the Human Exon 1.0 ST Array}
+
+\subsection{Comparison of RMA summarization at the probeset level}
+
+As already mentioned, comparison of \xps\ and APT with exon arrays requires the definition 
+of common probesets first. \\
+
+Thus we compute first RMA at the probeset level using package \xps:
+
+<<eval=FALSE>>=
+data.rma.ps <- rma(data.exon, "MixHuExonRMAcore_ps", background="antigenomic",
+                   normalize=TRUE, option="probeset", exonlevel="core")
+xps.rma.ps  <- validData(data.rma.ps)
+@
+
+Then we can create a file specifying the probesets to summarize for APT:
+
+<<eval=FALSE>>=
+tmp <- as.data.frame(rownames(xps.rma.ps))
+colnames(tmp) <- "probeset_id"
+write.table(tmp, "corePSList.txt", quote=FALSE, row.names=FALSE)
+@
+
+Finally we use this probesetList to compute RMA using APT:
+
+\begin{verbatim}
+apt-probeset-summarize -a rma-bg,quant-norm.sketch=0.usepm=true.bioc=true, \
+    pm-only,med-polish.expon=true \
+    -p HuEx-1_0-st-v2.r2.pgf -c HuEx-1_0-st-v2.r2.clf \
+    -b HuEx-1_0-st-v2.r2.antigenomic.bgp -s corePSList.txt *.CEL
+\end{verbatim}
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=80mm]{HuExon_XPS_APT_RMA_MvA_ps.png}
+  \caption{RMA computed with xps and apt, respectively.}
+  \label{exonrmaps}
+\end{center}
+\end{figure}
+
+\pagebreak
+
+As the resulting "MvA-plot" for tissue "breast\_A", shown in Figure \ref{exonrmaps}, reveals, 
+there is quite some difference for the probeset levels computed with \xps\ or APT, respectively.
+Thus let us compare the "median-polish" summarization step only, as done before for the gene 
+array. \\
+
+In package \xps\ this is done as follows:
+
+<<eval=FALSE>>=
+expr.mp.ps <- express(data.exon, "HuExonMedPolcorePS", summarize.method="medianpolish",
+              summarize.select="pmonly", summarize.option="probeset", summarize.logbase="log2",
+              summarize.params=c(10, 0.01, 1.0), exonlevel="core")
+xps.mp.ps <- validData(expr.mp.ps)
+@
+
+while APT uses the following command:
+
+\begin{verbatim}
+apt-probeset-summarize -a pm-only,med-polish.expon=true \
+   -p HuEx-1_0-st-v2.r2.pgf -c HuEx-1_0-st-v2.r2.clf \
+   -s corePSList.txt *.CEL
+\end{verbatim}
+
+The resulting Figure \ref{exonmpps} shows that the results obtained with \xps\ and APT are 
+identical (the difference being less than 6e-6, see scale of y-axis).
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=80mm]{HuExon_XPS_APT_MedPol_MvA_ps.png}
+  \caption{Median-polish only, computed with xps and apt, respectively.}
+  \label{exonmpps}
+\end{center}
+\end{figure}
+
+\pagebreak
+
+As for gene arrays, the differences seen in Figure \ref{exonrmaps} are due to background correction 
+and quantile normalization, respectively. This time we set parameter \Rcode{exonlevel} 
+individually to \Rcode{exonlevel= "all+genomic+antigenomic+intron+exon+unmapped"} for background 
+correction and quantile normalization, respectively, and \Rcode{exonlevel="core"} for 
+median-polish summarization:
+
+<<eval=FALSE>>=
+data.rma.ps.bq103 <- rma(data.exon, "HuExonMixRMAbgqu103mp9_ps", background="antigenomic",
+                     normalize=TRUE, option="probeset", exonlevel=c(1032124,1032124,9216))
+xps.rma.ps.bq103 <- validData(data.rma.ps.bq103)
+@
+
+Comparing the results of this setting to APT, we obtain the following "MvA-plot" for tissue 
+"breast\_A" shown in Figure \ref{exonrmabq103ps}.
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=80mm]{HuExon_XPS_APT_RMA_bg103qu103_MvA_ps.png}
+  \caption{RMA, computed with xps and apt, respectively.}
+  \label{exonrmabq103ps}
+\end{center}
+\end{figure}
+
+\pagebreak
+
+As Figure \ref{exonrmabq103ps} shows, the differences in the expression levels obtained when using 
+\xps\ or APT, respectively, are dramatically reduced. At high expression levels there is no 
+difference, while the difference at low expression levels is reduced to at most 20\%. 
+However, in contrast to the HuGene array the difference is still visible. Thus in this case it 
+is not clear to me which probes Affymetrix is using for background correction and quantile 
+normalization. \\
+
+
+\subsection{Comparison of RMA summarization at the transcript level}
+
+Comparing \xps\ and APT with exon arrays at the gene level requires the definition 
+of common probesets for each transcript, i.e. a file containing meta probeset definitions. \\
+
+First we compute RMA at the transcript level using package \xps:
+
+<<eval=FALSE>>=
+data.rma.tc <- rma(data.exon, "MixHuExonRMAcore_tc", background="antigenomic",
+                   normalize=TRUE, option="transcript", exonlevel="core")
+xps.rma.tc  <- validData(data.rma.tc)
+@
+
+Then we can create a meta probeset file using function \Rcode{metaProbesets()}:
+
+<<eval=FALSE>>=
+writeLines(rownames(xps.rma.tc), "core.txt")
+metaProbesets(scheme.exon, "core.txt", "coreList.mps", "core")
+@
+
+Now we use this 'coreList.mps' file to compute RMA using APT:
+
+\begin{verbatim}
+apt-probeset-summarize -a rma-bg,quant-norm.sketch=0.usepm=true.bioc=true, \
+    pm-only,med-polish.expon=true \
+    -p HuEx-1_0-st-v2.r2.pgf -c HuEx-1_0-st-v2.r2.clf \
+    -m coreList.mps *.CEL
+\end{verbatim}
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=80mm]{HuExon_XPS_APT_RMA_MvA_tc.png}
+  \caption{RMA computed with xps and apt, respectively.}
+  \label{exonrma}
+\end{center}
+\end{figure}
+
+\pagebreak
+
+As expected, the resulting "MvA-plot" for tissue "breast\_A", shown in Figure \ref{exonrma}, is 
+similar to Figure \ref{exonrmaps}. Again, we compare the "median-polish" summarization step only. \\
+
+In package \xps\ this is done as follows:
+
+<<eval=FALSE>>=
+expr.mp.tc <- express(data.exon, "HuExonMedPolcore", summarize.method="medianpolish",
+              summarize.select="pmonly", summarize.option="transcript", summarize.logbase="log2",
+              summarize.params=c(10, 0.01, 1.0), exonlevel="core")
+xps.mp.tc <- validData(expr.mp.tc)
+@
+
+while APT uses the following command:
+
+\begin{verbatim}
+apt-probeset-summarize -a pm-only,med-polish.expon=true \
+   -p HuEx-1_0-st-v2.r2.pgf -c HuEx-1_0-st-v2.r2.clf \
+   -m coreList.mps *.CEL
+\end{verbatim}
+
+As for the probesets, the resulting Figure \ref{exonmp} shows that the results obtained with 
+\xps\ and APT are identical (the difference being less than 6e-6, see scale of y-axis).
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=80mm]{HuExon_XPS_APT_MedPol_MvA_tc.png}
+  \caption{Median-polish only, computed with xps and apt, respectively.}
+  \label{exonmp}
+\end{center}
+\end{figure}
+
+\pagebreak
+
+When we set parameter \Rcode{exonlevel} individually to 
+\Rcode{exonlevel="all+genomic+antigenomic+intron+exon+unmapped"} for background correction and 
+quantile normalization, respectively, and \Rcode{exonlevel="core"} for median-polish summarization:
+
+<<eval=FALSE>>=
+data.rma.tc.bq103 <- rma(data.exon, "HuExonMixRMAbgqu103mp9_tc", background="antigenomic",
+                     normalize=TRUE, option="transcript", exonlevel=c(1032124,1032124,9216))
+xps.rma.tc.bq103 <- validData(data.rma.tc.bq103)
+@
+
+and compare the results to APT, we obtain the "MvA-plot" for tissue "breast\_A" shown in 
+Figure \ref{exonrmabq103}.
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=80mm]{HuExon_XPS_APT_RMA_bg103qu103_MvA_tc.png}
+  \caption{RMA, computed with xps and apt, respectively.}
+  \label{exonrmabq103}
+\end{center}
+\end{figure}
+
+\pagebreak
+
+As Figure \ref{exonrmabq103} shows, the differences in the expression levels obtained when using 
+\xps\ or APT, respectively, are also dramatically reduced. At high expression levels there is 
+almost no difference, while the difference at low expression levels is reduced to less than 20\%. \\
+
+
+\subsection{Comparison of the DABG call implementations}
+
+Now let us compare the detected above background (DABG) calls at the probeset level. 
+
+The command-line for APT is:
+
+\begin{verbatim}
+apt-probeset-summarize -a dabg \
+   -p HuEx-1_0-st-v2.r2.pgf -c HuEx-1_0-st-v2.r2.clf \
+   -b HuEx-1_0-st-v2.r2.antigenomic.bgp -s corePSList.txt  -x 12 *.CEL
+\end{verbatim}
+
+while package \xps\ computes DABG calls as follows:
+
+<<eval=FALSE>>=
+call.dabg.ps <- dabg.call(data.exon, "HuExonDABGcorePS", option="probeset", exonlevel="core")
+xps.pval.ps <- validData(call.dabg.ps)
+@
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=80mm]{HuExon_Diff_XPS_APT_DABG_pval_ps.png}
+  \caption{Comparison of p-values obtained with xps and APT.}
+  \label{exondabgpvalps}
+\end{center}
+\end{figure}
+
+Figure \ref{exondabgpvalps} shows the difference in the detection p-values obtained with \xps\ 
+and APT, respectively. The detection p-values are identical (the minor apparent difference 
+only due to different numbers of digits exported). \\
+
+\pagebreak
+
+{\bf Note:} Another advantage of package \xps\ compared to APT is, that you can compute DABG 
+calls not only at the probeset level but also at the transcript level. This is simply done 
+as follows:
+
+<<eval=FALSE>>=
+call.dabg.tc <- dabg.call(data.exon, "HuExonDABGcoreTC", option="transcript", exonlevel="core")
+xps.pval.tc <- pvalData(call.dabg.tc)
+@
+
+
+\section{Comparison of Affymetrix gene expression arrays}
+
+In this section we want to compare the gene expression levels obtained with arrays HG-U133\_Plus\_2, 
+HuGene-1\_0-st-v1 and HuEx-1\_0-st-v2, respectively, for tissues breast and prostate.
+For this purpose we need to select first a subset of transcripts common to all three arrays.
+Then we want to find differentially expressed transcripts and compare the results for the  
+normalized expression levels obtained with \xps\ or APT, respectively. 
+
+
+\subsection{Comparison of RMA summarization for common transcript probesets}
+
+In order to create a subset of transcripts common to all three arrays, we import as a first 
+step the "Array Comparison Spreadsheets", which can be downloaded from the Affymetrix web-site: 
+
+<<eval=FALSE>>=
+hx2hg <- read.delim("HuExVsHuGene_BestMatch.txt", row.names=3)
+up2hx <- read.delim("U133PlusVsHuEx_BestMatch.txt", row.names=3)
+up2hg <- read.delim("U133PlusVsHuGene_BestMatch.txt", row.names=3)
+@
+
+Since we want to compare the RMA normalized expression levels \Robject{xps.urma} (HG-U133\_Plus\_2), 
+\Robject{xps.grma} (HuGene-1\_0-st-v1) and \Robject{xps.xrma} (HuEx-1\_0-st-v2), with \Robject{xps.grma} 
+and \Robject{xps.xrma} using only the "core" transcript probesets, we obtain the common 
+subset \Robject{core}, containing unique exon and genome transcripts identical to U133P2 
+as follows:
+
+<<eval=FALSE>>=
+hx2hg <- uniqueframe(hx2hg)
+up2hx <- uniqueframe(up2hx)
+up2hg <- uniqueframe(up2hg)
+u2x   <- intersectframes(up2hx, up2hg)
+u2g   <- intersectframes(up2hg, up2hx)
+tmp   <- intersectrows(u2gx, xps.grma, 1, NULL)
+core  <- intersectrows(tmp,  xps.xrma, 2, NULL)
+@
+
+The resulting subset \Robject{core} consists of 11033 transcripts common to all arrays.
+
+{\bf Note:} The full source code and the functions \Rfunction{uniqueframe}, \Rfunction{intersectframes} 
+and \Rfunction{intersectrows} are described in file "script4bestmatch.R" located in directory 
+"examples". \\
+
+Now we obtain the following subsets of normalized expression data:
+
+<<eval=FALSE>>=
+xpsu <- intersectrows(xps.urma, core, NULL, NULL)
+xpsg <- intersectrows(xps.grma, core, NULL, 1, -1)
+xpsx <- intersectrows(xps.xrma, core, NULL, 2, -1)
+aptg <- intersectrows(apt.grma, core, NULL, 1, -1)
+aptx <- intersectrows(apt.xrma, core, NULL, 2, -1)
+@
+
+where \Robject{aptg} and \Robject{aptx} are the corresponding data for APT (w/o \Robject{aptu} 
+since it is identical to \Robject{xpsu}). 
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=90mm]{XPS_U133P2_Gene_Exon_mean_dot.png}
+  \caption{Scatter plot of mean expression summaries for breast.}
+  \label{breastpairs}
+\end{center}
+\end{figure}
+
+A scatter plot of the averaged gene-level summaries for breast tissue is shown in Figure 
+\ref{breastpairs} for the data obtained with package \xps. The corresponding figure for the data 
+obtained with APT is almost identical. Furthermore, Figure \ref{breastpairs} is very similar to
+the supplementary figure (page 10) published by Robinson \& Speed in \citep{robin:speed:2007}, 
+however, using the averaged gene-level summaries for one particular mixture, and Ensembl 
+gene-centric probesets.
+
+
+\subsection{Differentially expressed transcripts in breast vs prostate}
+
+Now we consider the task of finding differentially expressed genes between the breast and 
+prostate samples. Following Robinson \& Speed \citep{robin:speed:2007} we will use the moderated 
+t-statistics from package \Rpackage{limma} to compute raw p-values, which are then adjusted by 
+a Benjamini--Hochberg correction (the default setting). \\
+
+For this purpose we create the design matrix:
+
+<<eval=FALSE>>=
+tissue <- c(rep("Breast", 3), rep("Prostate", 3))
+design <- model.matrix(~factor(tissue)) 
+colnames(design) <- c("Breast","BreastvsProstate") 
+@
+
+which we use to compute the moderated t-statistics for each platform, e.g. for data \Robject{xpsu}:
+
+<<eval=FALSE>>=
+tmp <- as.matrix(log2(xpsu))
+fit <- lmFit(tmp, design) 
+fit <- eBayes(fit) 
+xpsu.lm <- topTable(fit, coef=2, n=length(rownames(tmp)), adjust="BH")
+@
+
+Now we can first compare the fold-change values for the different platforms.
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=90mm]{XPS_U133P2_HuGene_HuExon_logFC.png}
+  \caption{Scatter plot of fold-change values.}
+  \label{fcpairs}
+\end{center}
+\end{figure}
+
+Figure \ref{fcpairs} shows a scatter plot of the fold-change values for the data obtained with 
+package \xps. The corresponding figure for the data obtained with APT is (almost) identical.
+
+\pagebreak
+
+Regarding the computed p-values, let us first compare the p-values for the HuGene-1\_0-st-v1 
+data \Robject{xpsg} and \Robject{aptg} , obtained with \xps\ or APT, respectively. \\
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=90mm]{XPS_APT_HuGene_PValue.png}
+  \caption{Scatter plot of p-values obtained with xpsg, aptg, and bq99g.}
+  \label{pvalgene}
+\end{center}
+\end{figure}
+
+The upper rows of Figure \ref{pvalgene} compare the p-values obtained with \Robject{xpsg} and 
+\Robject{aptg}, respectively, whereby the right scatter-plot compares the lowest p-values 
+only, i.e. the most relevant p-values. The lower rows of Figure \ref{pvalgene} compare the 
+p-values obtained with \Robject{bq99g} and \Robject{aptg}, respectively, where \Robject{bq99g} is 
+identical to \Robject{aptg}, as shown in Figure \ref{genermabq99}. 
+
+Comparing the upper and lower scatter-plots reveals that the differences between \xps\ and APT, 
+seen in Figure \ref{generma}, may not have a large effect when computing moderated t-statistics. 
+The same is true when comparing the adjusted p-values. However, the differences between 
+\Robject{xpsg} and \Robject{aptg} are only a few percent, as seen in Figure \ref{generma}, 
+thus it is not unexpected that the (adjusted) p-values are very similar. \\
+
+In contrast, the differences between the expression levels obtained with array HuEx-1\_0-st-v2, 
+i.e. \Robject{xpsx} and \Robject{aptx}, respectively, are quite pronounced, as demonstrated 
+earlier (see Figure \ref{exonrma}). Thus it can be expected that these differences are also 
+reflected in differences in p-values, when computing the moderated t-statistics for \Robject{xpsx} 
+or \Robject{aptx}, respectively. As shown in Figure \ref{pvalexon}, this is indeed the case. 
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=90mm]{XPS_APT_HuExon_AdjPValue.png}
+  \caption{Scatter plot of adjusted p-values obtained with xpsx, aptx, and bq103x.}
+  \label{pvalexon}
+\end{center}
+\end{figure}
+
+\pagebreak
+
+In this case, the upper rows of Figure \ref{pvalexon} compare the BH-adjusted p-values obtained 
+with \Robject{xpsx} and  \Robject{aptx}, respectively, whereby the right scatter-plot compares 
+once again the lowest p-values only, i.e. the most relevant p-values.
+
+This time, the (adjusted) p-values computed for \Robject{xpsx} and \Robject{aptx}, respectively, 
+show clearly are larger variance. Of special interest is the upper right part of the figure, 
+which compares only the the most relevant p-values. It is evident, that the relevant adjusted 
+p-values computed for \Robject{xpsx} are smaller than the corresponding p-values computed for 
+\Robject{aptx} (as the slope of an imaginary fitted line would show). This indicates that the 
+expression levels \Robject{xpsx} obtained with package \xps\ result in a better separation between 
+tissues breast and prostate for the most relevant genes than the expression levels \Robject{aptx} 
+obtained with APT. 
+
+As described earlier, we have also adjusted background correction and quantile normalization to 
+resemble the APT expression levels (see Figure \ref{exonrmabq103}), resulting in subset 
+\Robject{bq103x}. Comparing the adjusted p-values obtained with these expression levels 
+(\Robject{bq103x}), with the p-values obtained with subset \Robject{aptx} results in the scatter 
+plot shown in the lower part of Figure \ref{pvalexon}. This part of the figure looks similar to 
+Figure \ref{pvalgene}, and shows that the adjusted p-values for \Robject{bq103x} and \Robject{aptx} 
+are very similar, although there is still a difference of about 20\% at low expression levels 
+(Figure \ref{exonrmabq103}). However, in both cases the relvant p-values are larger than the 
+p-values obtained with subset \Robject{xpsx}. In my opinion, this is a clear indication that 
+only those probes should be used for background correction and quantile normalization, which 
+are also used for median-polish summarization. 
+
+
+\section{Summary}
+
+Comparison of packages \xps\ and \Rpackage{affy} with APT for expression arrays shows that the 
+different implementations of the RMA algorithm result in identical expression levels, as shown 
+in Figure \ref{rma133pairs}. (The negligible difference of less than 5e-6 is due to the fact 
+that package \xps\ does all computations with double-precision (64bit), but saves the results 
+as floats (32bit)). \\
+
+Interestingly, all three implementations of the MAS5 algorithm (\Rpackage{xps}, \Rpackage{affy}, 
+APT) differ from the original GCOS implementation, with \xps\ probably being slightly more close 
+to GCOS than \Rpackage{affy} (Figure \ref{u133mas5}), but I may be biased. \\
+
+The implementations of MAS5 detection calls are identical for \xps\ and \Rpackage{affy}, but differ 
+slightly from the APT implementation which is identical to the GCOS implementation (Figure 
+\ref{u133mas5pvalpairs}). \\
+
+For the gene and exon arrays I have only compared \xps\ and APT, which both use the new 
+CLF-files and PGF-files as library files, and are able to use the separate probeset groups 'core', 
+'extended' and/or 'full', which are defined in the Affymetrix annotation files. \\
+
+Although the \xps\ and APT implementations of the RMA algorithm give identical results for 
+expression arrays, the results for both gene arrays and exon arrays seem to differ, as shown in 
+Figures \ref{generma} and \ref{exonrma}, respectively. As we have demonstrated earlier, this 
+difference is caused by using different probes for background correction and quantile normalization, 
+respectively, since using identical probes (HuGene) or applying only median-polish summarization 
+gives identical results (Figures \ref{genermabq99}, \ref{genemp} and \ref{exonmp}). 
+
+While package \xps\ uses by default the identical "PM" probes for all three steps of the RMA 
+algorithm, e.g. for \Rcode{exonlevel="core"} only probes belonging to the 'core' probesets 
+defined in the Affymetrix annotation files are used, APT uses (almost) all probes on the 
+respective array. Thus \xps\ follows the implementation of RMA for expression arrays, while 
+APT differes in the probes usage at the different steps. 
+
+In order to determine whether this difference in the probes usage may have an influence on 
+subsequent expression analysis steps, I have applied moderated t-statistics from package 
+\Rpackage{limma} to find differentially expressed genes between tissues breast and prostate.
+Computing raw and adjusted p-values for the gene array data results in almost identical 
+p-vlaues, indicating that the small difference seen in Figure \ref{generma} does not affect 
+further processing. In contrast, computing raw and adjusted p-values for the exon array data 
+reveals that the \xps\ default usage of identical probes for RMA normalization results in 
+lower (better) p-values in the relevant range to select genes of interest. \\
+
+The implementation of the DABG call algorithm in \xps\ is identical to APT, however for exon 
+arrays, \xps\ allows to apply DABG at both the probeset level as well as the transcript level. \\
+
+In summary, package \xps\ offers the following advantages compared to APT:
+
+\begin{itemize}
+\item full quantile normalization can be done on computers with 1GB RAM only.
+\item for RMA the same probes are used by default for background correction, quantile 
+ normalization and median-polish summarization for all three types of arrays.
+\item in addition, for gene and exon arrays it is possible to select probes to be used for 
+ background correction, quantile normalization and median-polish summarization, respectively,
+ independently.
+\item MAS5 detection calls can be applied to all three tpyes of arrays.
+\item DABG calls can be applied to all three tpyes of arrays.
+\item for exon arrays DABG can be applied at the probeset level and the transcript level,
+ respectively.
+\end{itemize}
+
+
+
+\pagebreak
+
+\appendix
+
+\section{Appendices}
+
+\subsection{Some notes on PLIER}
+
+As an alternative to RMA, Affymetrix has developed a new algorithm, called PLIER:
+"The PLIER (Probe Logarithmic Error Intensity Estimate) method produces an improved signal 
+by accounting for experimentally observed patterns in feature behavior and handling error 
+at the appropriately at low and high signal values." (according to the APT manual) \\
+
+Using the HG-U133\_Plus\_2 data set, the command-line for APT is:
+
+\begin{verbatim}
+apt-probeset-summarize -a plier-mm -d HG-U133_Plus_2.cdf *.CEL
+\end{verbatim}
+
+Now we import the results into R for visualization:
+
+<<eval=FALSE>>=
+apt.plier <- read.delim("plier-mm.summary.txt", row.names=1, comment.char="", skip=52)
+@
+
+There are many methods to visualize the quality of the normalization step, often based on 
+advanced statistical methods. However, often a simple visualization, e.g. a simple scatter-plot 
+is already very helpful. 
+Thus let us create a scatter-plot of the normalized data for the replicated breast tissue:
+
+<<eval=FALSE>>=
+plot(apt.plier[,1], apt.plier[,2], main="APT: PLIER", xlab="Breast_A", ylab="Breast_B",log="xy")
+@
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=80mm]{U133P2_APT_PLIER_Scatter.png}
+  \caption{Scatter-plot.}
+  \label{u133plier}
+\end{center}
+\end{figure}
+
+For comparison purposes, we create also "MvA-plots" for "Breast\_A" vs "Breast\_B" using either 
+PLIER or RMA for normalization:
+
+<<eval=FALSE>>=
+plot(log2(apt.plier[,1] * apt.plier[,2])/2, log2(apt.plier[,1]/apt.plier[,2]), main="APT: PLIER", xlab="A = Log2(BrA*BrB)", ylab="M = Log2(BrA/BrB)",log="")
+plot(log2(apt.rma[,1] * apt.rma[,2])/2, log2(apt.rma[,1]/apt.rma[,2]), main="APT: RMA", xlab="A = Log2(BrA*BrB)", ylab="M = Log2(BrA/BrB)",log="",ylim=c(-10,10))
+@
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=70mm]{U133P2_APT_PLIER_MvA.png}
+  \includegraphics[width=70mm]{U133P2_APT_RMA_MvA.png}
+  \caption{MvA-plot using PLIER (left) or RMA (right).}
+  \label{u133plierrma}
+\end{center}
+\end{figure}
+
+%\pagebreak
+
+As Figure \ref{u133plierrma} shows, the differences between PLIER and RMA are dramatically. \\
+
+%\pagebreak
+
+Please note that the following is only my personal subjective opinion:
+
+As both Figure \ref{u133plier} and Figure \ref{u133plierrma} reveal, PLIER produces severe 
+artifacts, even for replicate data, which are supposed to have very similar expression values. 
+Probably other people will not agree with me, however for this reason I never use PLIER, and 
+this is one of the reasons why I have decided not to implement PLIER in package \xps. 
+
+
+%\pagebreak
+
+\bibliographystyle{plainnat}
+\bibliography{xps}
+
+\end{document}

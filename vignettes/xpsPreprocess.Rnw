@@ -1,0 +1,1432 @@
+%\VignetteIndexEntry{4. XPS Vignette: Function express()}
+%\VignetteDepends{xps}
+%\VignetteKeywords{Expression, Affymetrix, Oligonucleotide Arrays}
+%\VignettePackage{xps}
+\documentclass{article}
+
+\usepackage{hyperref}
+\usepackage[authoryear,round]{natbib}
+
+\textwidth=6.2in
+\textheight=8.5in
+%\parskip=.3cm
+\oddsidemargin=.1in
+\evensidemargin=.1in
+\headheight=-.3in
+
+\newcommand{\Rfunction}[1]{{\texttt{#1}}}
+\newcommand{\Rmethod}[1]{{\texttt{#1}}}
+\newcommand{\Rcode}[1]{{\texttt{#1}}}
+\newcommand{\Robject}[1]{{\texttt{#1}}}
+\newcommand{\Rpackage}[1]{{\textsf{#1}}}
+\newcommand{\Rclass}[1]{{\textit{#1}}}
+\newcommand{\xps}{\Rpackage{xps}}
+\newcommand{\ROOT}{\Robject{ROOT}}
+
+\begin{document}
+
+%-----------------------------------------------------------------------
+\title{Introduction to the xps Package: Function \Rfunction{express()}}
+%-----------------------------------------------------------------------
+\date{September, 2010}
+\author{Christian Stratowa}
+\maketitle
+
+\tableofcontents
+
+%-----------------------------------------------------------------------
+\section{Introduction}
+%-----------------------------------------------------------------------
+
+This document describes how to use function \Rfunction{express} to combine different preprocessing 
+methods, which are currently available in package \xps\, i.e. methods for (i) background correction, 
+(ii) probe-level normalization, and (iii) summarization. These different methods, or a subset 
+thereof, can be computed with a single call to function \Rfunction{express}, or in a stepwise 
+manner by calling \Rfunction{express} consecutively with the result of one call used as input for 
+the next call. Applying \Rfunction{express} stepwise has certain advantages, which will be 
+explained later. Since \Rfunction{express} is a wrapper function to method \Rmethod{xpsPreprocess} 
+both function calls can be used. \\
+
+In addition to the mentioned preprocessing steps it is sometimes advisable to add a further 
+preprocessing step after the summarization step, i.e. (iv) probeset-level normalization. One 
+example is the MAS5 algorithm where the expression measures are usually scaled to a predefined 
+target intensity \citep{affy:tech:2002}. This additional step is handled by function 
+\Rfunction{normalize}, which is a wrapper to method \Rmethod{xpsNormalize}. \\
+
+Using a subset of the Affymetrix Exon Array Data Set "Tissue Mixture" for the expression array 
+"Human Genome U133 Plus 2.0", examples will be presented for all available algorithms for the 
+different preprocessing methods. The aim of this document is to explain all parameters for all 
+methods in detail based on the examples presented. 
+
+{\bf Note:} In order to keep this document short, only example code will be presented here, 
+the full source code is available in file "script4xpsPreprocess.R" located in directory 
+"xps/examples". 
+
+
+%-----------------------------------------------------------------------
+\section{Computing RMA using function \Rfunction{express()}}
+%-----------------------------------------------------------------------
+
+In the following subsections we will demonstrate how to compute RMA using the general function 
+\Rfunction{express}. However, first it is necessary to load the \ROOT\ \Rclass{scheme} and \ROOT\ 
+\Rclass{data} files, as explained in vignette "xps.pdf" (Overview): 
+<<eval=FALSE>>=
+scheme.u133p2 <- root.scheme(file.path(scmdir, "Scheme_HGU133p2_na28.root"))
+data.u133p2   <- root.data(scheme.u133p2, file.path(datdir, "HuTissuesU133P2_cel.root"))
+@
+
+Usually, RMA is computed with a simple call to function \Rfunction{rma}:
+<<eval=FALSE>>=
+data.rma <- rma(data.u133p2, "MixU133P2RMA", filedir=outdir)
+@
+
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Compute RMA with a single call to \Rfunction{express}}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Using a single call to function \Rfunction{express} RMA is computed as follows:
+<<eval=FALSE>>=
+expr.rma <- express(data.u133p2, "U133P2Exprs", filedir=outdir, tmpdir="", update=FALSE,
+            bgcorrect.method="rma", bgcorrect.select="none", bgcorrect.option="pmonly:epanechnikov",
+            bgcorrect.params=c(16384), normalize.method="quantile", normalize.select="pmonly", 
+            normalize.option="transcript:together:none", normalize.logbase="0", 
+            normalize.params=c(0.0), summarize.method="medianpolish", summarize.select="pmonly", 
+            summarize.option="transcript", summarize.logbase="log2", summarize.params=c(10, 0.01, 1.0))
+@
+
+Valid expression levels can be obtained by calling 
+<<eval=FALSE>>=
+expr  <- validExpr(expr.rma)
+@
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Compute RMA stepwise}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Alternatively, function \Rfunction{express} can be used to compute RMA step-by-step. This can 
+have the following advantages: 
+
+\begin{itemize}
+\item different algorithms can be tested at each step and combined w/o the need to re-calculate
+ the earlier step(s)
+\item quality control tests for each array can be done separately at each step
+\item stepwise computation is useful when computing RMA for 10,000 CEL-files or more \\
+\end{itemize}
+
+\begin{tabbing}
+{\bf 1. step:} background correction for \Rclass{DateTreeSet} \Robject{data.u133p2}: 
+\end{tabbing}
+
+The code for computing \Rcode{rma} background correction is as follows:
+<<eval=FALSE>>=
+bgrd.rma <- express(data.u133p2, "BgrdRMA", filedir=outdir, tmpdir="", update=FALSE,
+            bgcorrect.method="rma", bgcorrect.select="none", bgcorrect.option="pmonly:epanechnikov",
+            bgcorrect.params=c(16384))
+@
+
+{\bf Note:} For background correction is is not allowed to define a \Rcode{tmpdir}, otherwise all 
+trees would be stored in a temporary \ROOT\ file and file \Rcode{BgrdRMA.root} would be empty. \\
+
+Now we can do some quality controls such as drawing images, density plots and boxplots. \\
+
+First we draw the images for background values and background-corrected intensities, respectively, 
+for e.g. array "ProstateA":
+<<eval=FALSE>>=
+bgrdnames <- colnames(validBgrd(bgrd.rma))
+datanames <- colnames(validData(bgrd.rma))
+image(bgrd.rma, bg=TRUE, transfo=log2, col=heat.colors(12), names=bgrdnames[4])
+image(bgrd.rma, transfo=log2, col=heat.colors(12), names=datanames[4])
+@
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=70mm]{Image_BgrdRMA_bgrd4.png}
+  \includegraphics[width=70mm]{Image_BgrdRMA_data4.png}
+%  \caption{xxx}
+%  \label{xxx}
+\end{center}
+\end{figure}
+
+\pagebreak
+
+Then we draw the density plots for raw and background-corrected intensities, respectively:
+<<eval=FALSE>>=
+hist(data.u133p2, which="pm")
+hist(bgrd.rma, which="pm")
+@
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=70mm]{DensityPlot_DataU133P2.png}
+  \includegraphics[width=70mm]{DensityPlot_BgrdRMA.png}
+%  \caption{xxx}
+%  \label{xxx}
+\end{center}
+\end{figure}
+
+Finally we draw the boxplots for raw and background-corrected intensities, respectively:
+<<eval=FALSE>>=
+boxplot(data.u133p2, which="pm")
+boxplot(bgrd.rma, which="pm")
+@
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=70mm]{BoxPlot_DataU133P2.png}
+  \includegraphics[width=70mm]{BoxPlot_BgrdRMA.png}
+%  \caption{xxx}
+%  \label{xxx}
+\end{center}
+\end{figure}
+
+Alternatively, it is also possible to draw boxplots for background values and background-corrected 
+intensities, respectively, as follows:
+<<eval=FALSE>>=
+bgrd <- validBgrd(bgrd.rma, which="pm")
+data <- validData(bgrd.rma, which="pm")
+boxplot(log2(bgrd), las=2)
+boxplot(log2(data), las=2)
+@
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=70mm]{BoxPlot_BgrdRMA_bgrd.png}
+  \includegraphics[width=70mm]{BoxPlot_BgrdRMA_data.png}
+%  \caption{xxx}
+%  \label{xxx}
+\end{center}
+\end{figure}
+
+\pagebreak
+
+\begin{tabbing}
+{\bf 2. step:} quantile normalization for resulting \Rclass{DateTreeSet} \Robject{bgrd.rma}: 
+\end{tabbing}
+
+Using the background-corrected data \Rcode{bgrd.rma} as input the code for computing 
+\Rcode{quantile} normalization is as follows:
+<<eval=FALSE>>=
+norm.qu <- express(bgrd.rma, "NormQuan", filedir=outdir, tmpdir="", update=FALSE, 
+           normalize.method="quantile", normalize.select="pmonly", 
+           normalize.option="transcript:together:none", normalize.logbase="0",
+           normalize.params=c(0.0))
+@
+
+{\bf Note:} For the normalization step is is also not allowed to define a \Rcode{tmpdir}, otherwise 
+all trees would be stored in a temporary \ROOT\ file and file \Rcode{NormQuan.root} would be empty. \\
+
+Now we draw density plots and boxplots of the normalized intensities as quality controls:
+<<eval=FALSE>>=
+hist(norm.qu, which="pm")
+boxplot(norm.qu, which="pm")
+@
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=70mm]{DensityPlot_NormQuant.png}
+  \includegraphics[width=70mm]{BoxPlot_NormQuant.png}
+%  \caption{xxx}
+%  \label{xxx}
+\end{center}
+\end{figure}
+
+\pagebreak
+
+In addition we can draw scatter plots between normalized intensities at the probe-level:
+<<eval=FALSE>>=
+data <- validData(norm.qu, which="pm")
+plot(log2(data[,1]), log2(data[,2]), xlab="BreastA", ylab="BreastB")
+plot(log2(data[,1]), log2(data[,4]), xlab="BreastA", ylab="ProstateA")
+@
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=70mm]{ScatterPlot_NormQuant_PM_BrABrB.png}
+  \includegraphics[width=70mm]{ScatterPlot_NormQuant_PM_BrAPrA.png}
+%  \caption{xxx}
+%  \label{xxx}
+\end{center}
+\end{figure}
+
+
+\begin{tabbing}
+{\bf 3. step:} median-polish summarization for resulting \Rclass{DateTreeSet} \Robject{norm.qu}: 
+\end{tabbing}
+
+Finally we do \Rcode{medianpolish} summarization, using the normalized data \Rcode{norm.qu} as 
+input:
+<<eval=FALSE>>=
+expr.mp <- express(norm.qu, "ExprMedpol", filedir=outdir, tmpdir="", update=FALSE, 
+           summarize.method="medianpolish", summarize.select="pmonly", 
+           summarize.option="transcript", summarize.logbase="log2", 
+           summarize.params=c(10, 0.01, 1.0), bufsize=32000)
+@
+
+{\bf Note 1:} For the summarization step is is possible to define a \Rcode{tmpdir}; when handling 
+hundreds of trees on computers with 1 GB RAM only, it is even the recommended way for multichip 
+summarization methods such as \Rcode{medianpolish}. \\ 
+
+{\bf Note 2:} When using a multichip summarization method with data consisting of many thousand 
+trees it could also be necessary to reduce the basket size of each \ROOT\ tree, e.g. to a size 
+of \Rcode{bufsize=2000}. (Internally, each \ROOT\ tree consists of many tree baskets, and when 
+reading a tree, one basket after the other is loaded into memory and not the whole tree, thus 
+reducing memory consumption.) \\
+
+Now we can draw density plots and boxplots of the final expression values:
+<<eval=FALSE>>=
+hist(expr.mp)
+boxplot(expr.mp) 
+@
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=70mm]{DensityPlot_ExprMedpol.png}
+  \includegraphics[width=70mm]{BoxPlot_ExprMedpol.png}
+%  \caption{xxx}
+%  \label{xxx}
+\end{center}
+\end{figure}
+
+\pagebreak
+
+In addition we can draw scatter plots between expression values at the transcript-level:
+<<eval=FALSE>>=
+expr  <- validData(expr.mp)
+plot(log2(expr[,1]), log2(expr[,2]), xlab="BreastA", ylab="BreastB")
+plot(log2(expr[,1]), log2(expr[,4]), xlab="BreastA", ylab="ProstateA")
+@
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=70mm]{ScatterPlot_ExprMedpol_BrABrB.png}
+  \includegraphics[width=70mm]{ScatterPlot_ExprMedpol_BrAPrA.png}
+%  \caption{xxx}
+%  \label{xxx}
+\end{center}
+\end{figure}
+
+\pagebreak
+
+
+%-----------------------------------------------------------------------
+\section{Background Correction using \Rfunction{express()}}
+%-----------------------------------------------------------------------
+
+Currently the following background correction methods are available as \Rcode{bgcorrect.method}:
+\begin{itemize}
+\item {\tt rma}: background is calculated using a global model for the distribution of probe 
+ intensities.
+\item {\tt sector}: a constant background is calculated for each sector separately and subtracted 
+ from intensities.
+\item {\tt weightedsector}: first, a constant background is calculated for each sector separately,
+ then a weight is calculated and each background value multiplied with the weight to smooth the
+ transition between sectors, and finally the smoothed background is subtracted from intensities.
+\item {\tt gccontent}: background is calculated based on the mean intensity of probes with
+ identical GC content.
+\end{itemize}
+
+{\bf Note:} By default the summarization methods \Rcode{farms} and \Rcode{dfw} skip the background 
+correction step. 
+
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{rma}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+The \Rcode{rma} background adjustment method is described in Irizarry \citep{iriz:etal:2003}. 
+By default PM probe intensities are corrected by using a global model for the distribution of 
+probe intensities. When using function \Rfunction{express()} the following \Rcode{bgcorrect} 
+parameters can be used for \Rcode{bgcorrect.method="rma"}: 
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{bgcorrect.select}: \\
+{\tt none}:  \> scheme mask is not changed by selector 
+\end{tabbing}
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{bgcorrect.option = "<option>:<kernel>"}: \\
+{\tt option}:  \> pmonly, mmonly, both \\
+{\tt kernel}:  \> epanechnikov, gaussian, rectangular, triangular, biweight, cosine, optcosine 
+\end{tabbing}
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{bgcorrect.params}: \\
+{\tt numpoints}:  \> size of density array, preferrable power of 2 (default: 16384) 
+\end{tabbing}
+
+The default settings for \Rcode{rma} background correction are:
+<<eval=FALSE>>=
+bgrd.rma <- express(data.u133p2, "BgrdRMA", filedir=outdir, tmpdir="", update=FALSE,
+            bgcorrect.method="rma", bgcorrect.select="none", bgcorrect.option="pmonly:epanechnikov",
+            bgcorrect.params=c(16384))
+@
+
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{sector (mas4)}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+The \Rcode{sector} background subtraction method divides the array into a certain number of sectors, 
+identifies the lowest 2\% of probe intensities for each sector, and computes their average, whereby 
+all probes are used \citep{affy:tech:2001}. When using function \Rfunction{express()} the following 
+\Rcode{bgcorrect} parameters can be used for \Rcode{bgcorrect.method="sector"}:
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{bgcorrect.select}: \\
+{\tt all}:    \> all probes are selected (default) \\ 
+{\tt pmonly}: \> only PM probes are selected \\ 
+{\tt mmonly}: \> only MM probes are selected \\ 
+{\tt both}:   \> both PM and MM probes are selected \\
+{\tt none}:   \> scheme mask is not changed by selector 
+\end{tabbing}
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{bgcorrect.option}: \\
+{\tt subtractbg}:  \> subtract bgrd from intensity (default) - result can be negative \\
+{\tt correctbg}:   \> correct bgrd with noise fraction to avoid negative results \\
+{\tt attenuatebg}: \> use generalized log-transform to avoid negative results
+\end{tabbing}
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{bgcorrect.params}: \\
+The following parameters are necessary:  \\
+{\tt pcntcells}:  \> precent of cells with lowest intensities in each sector (default: 0.02) \\
+{\tt secrows}:    \> number of sector rows (default: 4) \\
+{\tt seccols}:    \> number of sector columns (default: 4) \\
+{\tt smoothiter}: \> number of iterations used for smoothing of sector bgrd values (default: 0) \\
+Optional parameter when using \Rcode{bgcorrect.option="correctbg"}: \\
+{\tt noisefrac}:  \> fraction of global background variation (default: 0.5) \\
+Optional parameters when using \Rcode{bgcorrect.option="attenuatebg"}: \\
+{\tt l}:          \> tunable parameter, 0<=l<=1 (default: 0.005)  \\    
+{\tt h}:          \> parameter (default: -1) 
+\end{tabbing}
+
+Using the default settings the MAS4 \Rcode{sector} background correction is obtained as follows:
+<<eval=FALSE>>=
+bgrd.mas4 <- express(data.u133p2, "BgrdMAS4", filedir=outdir, tmpdir="", update=FALSE, 
+             bgcorrect.method="sector", bgcorrect.select="all", bgcorrect.option="subtractbg",
+             bgcorrect.params=c(0.02, 4, 4, 0))
+@
+
+However, using the default settings has severe disadvantages: 
+
+First, using \Rcode{bgcorrect.option="subtractbg"} results in a high percentage of 
+background-corrected probe intensities with negative values! This was the most severe problem of 
+the MAS4 algorithm \citep{affy:tech:2001} since it resulted in negative expression levels, too. 
+
+Second, to divide an array into 16 sectors was sufficient for the initial expression arrays, e.g. 
+HuGeneFL, but for the newer arrays, e.g. HG-U133\_Plus\_2, and especially the whole genome and 
+exon arrays it would be of advantage to divide the array into more sectors, e.g. 64 sectors. \\
+
+Thus, the following setup is recommended for \Rcode{sector} background correction:
+<<eval=FALSE>>=
+bgrd.mas <- express(data.u133p2, "BgrdMAS8x8", filedir=outdir, tmpdir="", update=FALSE, 
+            bgcorrect.method="sector", bgcorrect.select="both", bgcorrect.option="correctbg",
+            bgcorrect.params=c(0.02, 8, 8, 3, 0.5))
+@
+Here we divide each array into 8x8 sectors, use only PM+MM probes, and use 
+\Rcode{bgcorrect.option="correctbg"}, which is the default option for MAS5 and avoids negative 
+probe intensities. \\
+
+Now we can compare the resulting background values by drawing the corresponding images:
+<<eval=FALSE>>=
+bgrdnames <- colnames(validBgrd(bgrd.mas4))
+image(bgrd.mas4, bg=TRUE, transfo=log2, col=heat.colors(12), names=bgrdnames[4])
+bgrdnames <- colnames(validBgrd(bgrd.mas))
+image(bgrd.mas, bg=TRUE, transfo=log2, col=heat.colors(12), names=bgrdnames[4])
+@
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=70mm]{Image_BgrdMAS4_bgrd4.png}
+  \includegraphics[width=70mm]{Image_BgrdMAS8x8x_bgrd4.png}
+%  \caption{xxx}
+%  \label{xxx}
+\end{center}
+\end{figure}
+
+\pagebreak
+
+As both figures show there is a density gradient indicating that there might have been a problem 
+with the staining/washing step of this specific array. However, the right image shows this effect 
+more clearly, and additionally it results in more smooth transitions between adjacent sectors.
+
+{\bf Note:} To test the quality of arrays with respect to potential density gradients, I would 
+propose to use the \Rcode{sector} background with 8x8 sectors and option \Rcode{"correctbg"}. 
+In addition, these settings could also replace the default MAS5 \Rcode{weightedsector} background 
+algorithm described below. 
+
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{weightedsector (mas5)}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+The \Rcode{weightedsector} background correction method divides the array into a certain number of 
+sectors and identifies the lowest 2\% of probe intensities for each sector. However, in contrast to 
+\Rcode{sector} only PM and MM probes are used and each probe is adjusted based upon a weighted 
+average of the backgrounds for each of the sectors. The weights are based on the distances between 
+the location of the probe and the centriods of the different sectors \citep{affy:tech:2002}. 
+When using function \Rfunction{express()} the following \Rcode{bgcorrect} parameters can be used 
+for \Rcode{bgcorrect.method="weightedsector"}:
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{bgcorrect.select}: \\
+{\tt all}:    \> all probes are selected \\ 
+{\tt pmonly}: \> only PM probes are selected \\ 
+{\tt mmonly}: \> only MM probes are selected \\ 
+{\tt both}:   \> both PM and MM probes are selected (default) \\
+{\tt none}:   \> scheme mask is not changed by selector 
+\end{tabbing}
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{bgcorrect.option}: \\
+{\tt subtractbg}:  \> subtract bgrd from intensity - result can be negative \\
+{\tt correctbg}:   \> correct bgrd with noise fraction to avoid negative results (default) \\
+{\tt attenuatebg}: \> use generalized log-transform to avoid negative results
+\end{tabbing}
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{bgcorrect.params}: \\
+The following parameters are necessary:  \\
+{\tt pcntcells}:  \> precent of cells with lowest intensities in each sector (default: 0.02) \\
+{\tt secrows}:    \> number of sector rows (default: 4) \\
+{\tt seccols}:    \> number of sector columns (default: 4) \\
+{\tt smoothiter}: \> number of iterations used for smoothing of sector bgrd values (default: 0) \\
+{\tt smooth}:     \> smoothing parameter added to avoid infinite weights (default: 100) \\
+Parameter when using default \Rcode{mas5} background \Rcode{bgcorrect.option="correctbg"}: \\
+{\tt noisefrac}:  \> fraction of global background variation (default: 0.5) \\
+Optional parameters when using alternative background \Rcode{bgcorrect.option="attenuatebg"}: \\
+{\tt l}:          \> tunable parameter, 0<=l<=1 (default: 0.005)  \\    
+{\tt h}:          \> parameter (default: -1) \\
+\end{tabbing}
+
+Using the default settings the MAS5 \Rcode{weightedsector} background correction is obtained as 
+follows:
+<<eval=FALSE>>=
+bgrd.mas5 <- express(data.u133p2, "BgrdMAS5", filedir=outdir, tmpdir="", update=FALSE, 
+             bgcorrect.method="weightedsector", bgcorrect.select="both", bgcorrect.option="correctbg",
+             bgcorrect.params=c(0.02, 4, 4, 0, 100, 0.5))
+@
+
+For quality control purposes we can e.g. draw density plots of the background-corrected intensities, 
+and boxplots of the background values:
+<<eval=FALSE>>=
+hist(bgrd.mas5, which="both")
+bgrd <- validBgrd(bgrd.mas5)
+boxplot(log2(bgrd), las=2)
+@
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=70mm]{DensityPlot_BgrdMAS5_both.png}
+  \includegraphics[width=70mm]{BoxPlot_BgrdMAS5_bgrd.png}
+%  \caption{xxx}
+%  \label{xxx}
+\end{center}
+\end{figure}
+
+The density plot of the background-corrected intensities reveals a small peak around zero log 
+intensity indicating that for a certain fraction of probes intensities were replaced by the noise 
+fraction. Reducing the lowest percentage of cells used for background correction to 0.5\%, i.e. 
+\Rcode{pcntcells=0.005} eliminated this peak almost completely.  \\ 
+
+As already explained for \Rcode{sector} background, it is of advantage to increase the number of 
+sectors used to 8x8 sectors:
+<<eval=FALSE>>=
+bgrd.mas <- express(data.u133p2, "BgrdMAS5_8x8", filedir=outdir, tmpdir="", update=FALSE, 
+            bgcorrect.method="weightedsector", bgcorrect.select="both", bgcorrect.option="correctbg",
+            bgcorrect.params=c(0.02, 8, 8, 3, 100, 0.5))
+@
+
+As above, we can compare the resulting background values by drawing the corresponding images:
+<<eval=FALSE>>=
+bgrdnames <- colnames(validBgrd(bgrd.mas5))
+image(bgrd.mas5, bg=TRUE, transfo=log2, col=heat.colors(12), names=bgrdnames[4])
+bgrdnames <- colnames(validBgrd(bgrd.mas4))
+image(bgrd.mas, bg=TRUE, transfo=log2, col=heat.colors(12), names=bgrdnames[4])
+@
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=70mm]{Image_BgrdMAS5_bgrd4.png}
+  \includegraphics[width=70mm]{Image_BgrdMAS5_8x8_bgrd4.png}
+%  \caption{xxx}
+%  \label{xxx}
+\end{center}
+\end{figure}
+
+Due to the weighting algorithm used, each sector is smoothed so that it is a "cone" centered in 
+the middle of the sector. Once again, the right image shows the density gradient more clearly 
+and results in more smooth transitions between adjacent sectors. 
+
+{\bf Note:} Due to the weighting algorithm used computing the \Rcode{weightedsector} background 
+consumes large amounts of memory, which can be a severe problem when trying to use 8x8 sectors 
+for high density arrays, especially  exon arrays. 
+
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{gccontent}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+The \Rcode{gccontent} background attenuation method identifies MM probes and PM probes with the 
+same GC content and uses the mean intensity of the MM probes to "attenuate" the corresponding 
+PM intensities. It was introduced by Affymetrix for the exon arrays containing special "genomic" 
+and "antigenomic" probes \citep{affy:tech:2005c}, but can also be used for expression arrays. 
+When using function \Rfunction{express()} the following \Rcode{bgcorrect} parameters can be used 
+for \Rcode{bgcorrect.method="gccontent"}:
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{bgcorrect.select}: \\
+{\tt all}:    \> all probes are selected \\ 
+{\tt pmonly}: \> only PM probes are selected \\ 
+{\tt mmonly}: \> only MM probes are selected \\ 
+{\tt both}:   \> both PM and MM probes are selected \\
+{\tt none}:   \> scheme mask is not changed by selector 
+\end{tabbing}
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{bgcorrect.option}: \\
+{\tt subtractbg}:  \> subtract bgrd from intensity - result can be negative \\
+{\tt correctbg}:   \> correct bgrd with noise fraction to avoid negative results \\
+{\tt attenuatebg}: \> use generalized log-transform to avoid negative results (default)
+\end{tabbing}
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{bgcorrect.params}: \\
+The following parameters are necessary:  \\
+{\tt trim}:       \> trim value for trimmed mean (default: 0.5) \\
+Parameters when using default background \Rcode{bgcorrect.option="attenuatebg"}: \\
+{\tt l}:          \> tunable parameter, 0<=l<=1 (default: 0.005)  \\    
+{\tt h}:          \> parameter (default: -1) \\
+Optional parameter when using background \Rcode{bgcorrect.option="correctbg"}: \\
+{\tt noisefrac}:  \> fraction of global background variation (default: 0.5) \\
+\end{tabbing}
+
+The \Rcode{gccontent} background correction is computed as follows:
+<<eval=FALSE>>=
+bgrd.gc <- express(data.u133p2, "BgrdGC", filedir=outdir, tmpdir="", update=FALSE, 
+           bgcorrect.method="gccontent", bgcorrect.select="none", bgcorrect.option="attenuatebg",
+           bgcorrect.params=c(0.4, 0.005, -1.0))
+@
+
+For quality control purposes we can draw density plots of the background-corrected intensities, 
+and boxplots of the background values:
+<<eval=FALSE>>=
+hist(bgrd.gc, which="pm")
+bgrd <- validBgrd(bgrd.gc, which="pm")
+boxplot(log2(bgrd), las=2)
+@
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=70mm]{DensityPlot_BgrdGC_pm.png}
+  \includegraphics[width=70mm]{BoxPlot_BgrdGC_bgrd.png}
+%  \caption{xxx}
+%  \label{xxx}
+\end{center}
+\end{figure}
+
+In addition we can draw the image for the background values:
+<<eval=FALSE>>=
+bgrdnames <- colnames(validBgrd(bgrd.gc))
+image(bgrd.gc, bg=TRUE, transfo=log2, col=heat.colors(12), names=bgrdnames[4])
+@
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=70mm]{Image_BgrdGC_bgrd4.png}
+%  \caption{xxx}
+%  \label{xxx}
+\end{center}
+\end{figure}
+
+\pagebreak
+
+
+%-----------------------------------------------------------------------
+\section{Probe-level Normalization using \Rfunction{express()}}
+%-----------------------------------------------------------------------
+
+Currently the following probe-level normalization methods are available as \Rcode{normalize.method}:
+\begin{itemize}
+\item {\tt quantile}: normalization is done by replacing sorted intensities with the respective 
+ column means.
+\item {\tt mean}: all arrays are scaled so that they have the same trimmed mean value.
+\item {\tt median}: all arrays are scaled so that they have the same median value.
+\item {\tt lowess}: each array is normalized to a reference array using locally-weighted polynomial 
+ regression.
+\item {\tt supsmu}: each array is normalized to a reference array by applying Friedmann's super 
+ smoother.
+\end{itemize}
+
+{\bf Note 1:} The following examples will be based on \Rcode{sector} background \Robject{bgrd.mas} 
+although we could use any of the above background algorithms, or even skip the background correction 
+by using the raw data \Robject{data.u133p2}. \\ 
+
+{\bf Note 2:} By default the summarization methods \Rcode{avgdiff} (MAS4) and \Rcode{tukeybiweight} 
+(MAS5) skip the probe-level normalization step, i.e. use \Robject{data.u133p2}. 
+
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{quantile (rma)}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+The quantile normalization method was introduced by Bolstad \citep{bols:etal:2003} with the 
+goal to give each array the same empirical distribution. To allow quantile normalization of many
+thousand arrays on computers with 1-2 GB RAM only, package \xps\ uses \ROOT\ trees for quantile 
+normalization: Intensities for each array are sorted and stored in \ROOT\ trees together with their 
+ranks. After replacing the sorted tree entries with the mean entries of all trees, the trees are 
+sorted according to their original ranks. 
+When using function \Rfunction{express()} the following \Rcode{normalize} parameters can be used 
+for \Rcode{normalize.method="quantile"}:
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{normalize.select}: \\
+{\tt pmonly}: \> only PM probes are selected \\ 
+{\tt mmonly}: \> only MM probes are selected \\ 
+{\tt both}:   \> both PM and MM probes are selected \\
+{\tt none}:   \> scheme mask is not changed by selector 
+\end{tabbing}
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{normalize.option = "<option>:<dataopt>:<bgrdopt>"}: \\
+{\tt option}:  \> use unit tree for "transcript", "exon", "probeset" \\
+{\tt dataopt}: \> applied to PM and MM "together" or "separate" \\
+{\tt bgrdopt}: \> "none" -  no background subtraction (already done)
+\end{tabbing}
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{normalize.params}: \\
+{\tt trim}:   \> trim value for trimmed mean (default: 0.0) \\
+{\tt delta}:  \> use robust ties (0.4 for package affy >=1.16.0) or not (default: 1.0) 
+\end{tabbing}
+
+The \Rcode{quantile} probe-level normalization is computed as follows:
+<<eval=FALSE>>=
+norm.qu <- express(bgrd.mas, "NormQuan", filedir=outdir, update=FALSE, 
+           normalize.method="quantile", normalize.select="all", 
+           normalize.option="transcript:together:none",
+           normalize.logbase="0", normalize.params=c(0.0, 1.0))
+@
+
+As for the initial example of step-wise RMA computation (see chapter 2.2 above), density plots, 
+boxplots and scatter plots can be drawn as quality controls. 
+
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{mean/median (constant)}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+All arrays are scaled so that they have the same mean/median value. This value is determined 
+either by the mean/median value of a reference tree or by a given target intensity.
+When using function \Rfunction{express()} the following \Rcode{normalize} parameters can be used 
+for \Rcode{normalize.method="mean"} or for \Rcode{normalize.method="median"}, respectively:
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{normalize.select}: \\
+{\tt all}:    \> all probes are selected \\ 
+{\tt pmonly}: \> only PM probes are selected \\ 
+{\tt mmonly}: \> only MM probes are selected \\ 
+{\tt both}:   \> both PM and MM probes are selected 
+\end{tabbing}
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{normalize.option = "<option>:<dataopt>"}: \\
+{\tt option}:  \> use unit tree for "transcript", "exon", "probeset" \\
+{\tt dataopt}: \> applied to "all" selected probes
+\end{tabbing}
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{normalize.logbase}: \\
+{\tt logbase}: \> "0" - linear, "log", "log2", "log10" - log with base e, 2, 10
+\end{tabbing}
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{normalize.params}: \\
+{\tt trim}:        \> trim value for trimmed mean (only for method "mean") \\
+{\tt targetinten}: \> if > 0 then scale mean/median to value of target intensity
+\end{tabbing}
+
+The trimmed \Rcode{mean} probe-level normalization is computed as follows (by default, a mean 
+reference tree is computed first):
+<<eval=FALSE>>=
+norm.mn <- express(bgrd.mas, "NormMean", filedir=outdir, tmpdir="", update=FALSE, 
+           normalize.method="mean", normalize.select="both", normalize.option="transcript:all",
+           normalize.logbase="0", normalize.params=c(0.0, -1))
+@
+
+Analogously, when determining a certain target intensity (e.g. 500) as reference, the \Rcode{median} 
+probe-level normalization is computed as follows:
+<<eval=FALSE>>=
+norm.md <- express(bgrd.mas, "NormMedian", filedir=outdir, tmpdir="", update=FALSE, 
+           normalize.method="median", normalize.select="pmonly", normalize.option="transcript:all",
+           normalize.logbase="log2", normalize.params=c(500), reference.index=1)
+@
+
+Here the reference index is set to \Rcode{reference.index=1} to prevent computing a mean reference 
+tree which will not be used since the intensities are normalized to target intensity 500 and not 
+to a reference tree.
+
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{lowess}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Each array is normalized to a reference array using locally-weighted polynomial regression. The 
+reference array can be one of the arrays or the mean/median of all arrays.
+When using function \Rfunction{express()} the following \Rcode{normalize} parameters can be used 
+for \Rcode{normalize.method="lowess"}:
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{normalize.select}: \\
+{\tt all}:    \> all probes are selected \\ 
+{\tt pmonly}: \> only PM probes are selected \\ 
+{\tt mmonly}: \> only MM probes are selected \\ 
+{\tt both}:   \> both PM and MM probes are selected 
+\end{tabbing}
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{normalize.option = "<option>:<dataopt>"}: \\
+{\tt option}:  \> use unit tree for "transcript", "exon", "probeset" \\
+{\tt dataopt}: \> applied to "all" selected probes
+\end{tabbing}
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{normalize.logbase}: \\
+{\tt logbase}: \> "0" - linear, "log", "log2", "log10" - log with base e, 2, 10
+\end{tabbing}
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{normalize.params}: \\
+The following parameters are necessary:  \\
+{\tt span}: \> smoother span (default: 2/3) \\
+{\tt iter}: \> number of robustifying iterations (default: 3) \\
+{\tt rule}: \> 0, 1 or 2, determines how approx interpolation should be done at ends \\
+{\tt f}:    \> for approx method "constant" a value between 0 and 1 (not used)
+\end{tabbing}
+
+The \Rcode{lowess} probe-level normalization is computed as follows:
+<<eval=FALSE>>=
+norm.low <- express(bgrd.mas, "NormLowess", filedir=outdir, tmpdir="", update=FALSE, 
+            normalize.method="lowess", normalize.select="pmonly", normalize.option="transcript:all",
+            normalize.logbase="log2", normalize.params=c(0.67, 3.0, 0.0, 0.0))
+@
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{supsmu}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Each array is normalized to a reference array by applying Friedmann's super smoother. The 
+reference array can be one of the arrays or the mean/median of all arrays.
+When using function \Rfunction{express()} the following \Rcode{normalize} parameters can be used 
+for \Rcode{normalize.method="supsmu"}:
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{normalize.select}: \\
+{\tt all}:    \> all probes are selected \\ 
+{\tt pmonly}: \> only PM probes are selected \\ 
+{\tt mmonly}: \> only MM probes are selected \\ 
+{\tt both}:   \> both PM and MM probes are selected 
+\end{tabbing}
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{normalize.option = "<option>:<dataopt>"}: \\
+{\tt option}:  \> use unit tree for "transcript", "exon", "probeset" \\
+{\tt dataopt}: \> applied to "all" selected probes
+\end{tabbing}
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{normalize.logbase}: \\
+{\tt logbase}: \> "0" - linear, "log", "log2", "log10" - log with base e, 2, 10
+\end{tabbing}
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{normalize.params}: \\
+The following parameters are necessary:  \\
+{\tt bass}: \> controls smoothness of fitted curve (default: 0.0) \\
+{\tt span}: \> fraction of observations in span (default: 0.0) \\
+{\tt rule}: \> 0, 1 or 2, determines how approx interpolation should be done at ends \\
+{\tt f}:    \> for approx method "constant" a value between 0 and 1 (not used)
+\end{tabbing}
+
+The \Rcode{supsmu} probe-level normalization is computed as follows:
+<<eval=FALSE>>=
+norm.sup <- express(bgrd.mas, "NormSupsmuR2", filedir=outdir, tmpdir="", update=FALSE, 
+            normalize.method="supsmu", normalize.select="pmonly", normalize.option="transcript:all",
+            normalize.logbase="log2", normalize.params=c(0.0, 0.0, 2.0, 0.0))
+@
+
+As quality control we can draw density plots and boxplots of the normalized probe intensities:
+<<eval=FALSE>>=
+hist(norm.sup, which="pm")
+boxplot(norm.sup, which="pm")
+@
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=70mm]{DensityPlot_NormSup_BgrdMAS.png}
+  \includegraphics[width=70mm]{BoxPlot_NormSup_BgrdMAS.png}
+%  \caption{xxx}
+%  \label{xxx}
+\end{center}
+\end{figure}
+
+\pagebreak
+
+
+%-----------------------------------------------------------------------
+\section{Summarization using \Rfunction{express()}}
+%-----------------------------------------------------------------------
+
+Summarization converts the (background-corrected and/or normalized) probe intensities to 
+the corresponding expression levels for probe sets defined with \Rcode{summarize.option}:
+\begin{tabbing}
+xxx\=xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+%Settings to be used for \Rcode{summarize.option}: \\
+\> {\tt transcript}: \> summarization units are transcripts (default) \\
+\> {\tt exon}:       \> summarization units are exons (exon arrays only) \\
+\> {\tt probeset}:   \> summarization units are probesets (exon arrays only)
+\end{tabbing}
+
+\begin{tabbing}
+Currently the following summarization methods are available as \Rcode{summarize.method}:
+\end{tabbing}
+\begin{itemize}
+\item {\tt medianpolish}: fits an additive model using Tukey's median polish procedure. 
+\item {\tt avgdiff}: computes the average difference between PM and MM.
+\item {\tt tukeybiweight}: a Tukey biweight estimator is used to compute a robust mean of 
+ (adjusted) intensities.
+\item {\tt dfw}: a distribution-free weight is applied to each probe before summarization.
+\item {\tt farms}: a factor analysis model is used for noise correction of measurement values 
+ before summarization.
+\end{itemize}
+
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{medianpolish (rma)}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+This multichip summarization method fits a robust linear model using Tukey's median polish procedure.
+When using function \Rfunction{express()} the following \Rcode{summarize} parameters can be used 
+for \Rcode{summarize.method="medianpolish"}:
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{summarize.select}: \\
+{\tt pmonly}: \> only PM probes are selected (default) \\ 
+{\tt mmonly}: \> only MM probes are selected 
+\end{tabbing}
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{summarize.logbase}: \\
+{\tt logbase}: \> "0" - linear, "log", "log2", "log10" - log with base e, 2, 10
+\end{tabbing}
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{summarize.params}: \\
+{\tt maxiter}: \> maximal number of iterations (default: 10) \\
+{\tt eps}:     \> epsilon of test for convergence (default: 0.01) \\
+{\tt neglog}:  \> substitution for logarithm of negative values (default: 1.0)
+\end{tabbing}
+
+The default RMA \Rcode{medianpolish} summarization is computed as follows:
+<<eval=FALSE>>=
+expr.mp <- express(norm.qu, "ExprMedpol", filedir=outdir, update=FALSE, 
+           summarize.method="medianpolish", summarize.select="pmonly", summarize.option="transcript",
+           summarize.logbase="log2", summarize.params=c(10, 0.01, 1.0))
+@
+
+As for the initial example of step-wise RMA computation (see chapter 2.2 above), density plots, 
+boxplots and scatter plots can be drawn as quality controls. 
+
+\pagebreak
+
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{avgdiff (mas4)}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+This summarization method takes the difference PM-MM of every probe pair and averages the differences 
+over the entire probe set. 
+When using function \Rfunction{express()} the following \Rcode{summarize} parameters can be used 
+for \Rcode{summarize.method="avgdiff"}:
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{summarize.select}: \\
+{\tt none}:   \> scheme mask is not changed by selector (default) 
+\end{tabbing}
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{summarize.logbase}: \\
+{\tt logbase}: \> "0" - linear, "log", "log2", "log10" - log with base e, 2, 10
+\end{tabbing}
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{summarize.params}: \\
+{\tt STP}:  \> number of standard deviations (default: 3)
+\end{tabbing}
+
+The MAS4 \Rcode{avgdiff} summarization is computed as follows (here we use the background-corrected 
+intensities \Rcode{bgrd.mas} w/o normalization):
+<<eval=FALSE>>=
+expr.adf <- express(bgrd.mas, "ExprAvgDif", filedir=outdir, update=FALSE, 
+            summarize.method="avgdiff", summarize.select="none", summarize.option="transcript",
+            summarize.logbase="0", summarize.params=c(3.0))
+@
+
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{tukeybiweight (mas5)}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+After subtracting an ideal mismatch value from PM, a 1-step Tukey biweight estimator is used to 
+compute a robust mean of the resulting values. 
+When using function \Rfunction{express()} the following \Rcode{summarize} parameters can be used 
+for \Rcode{summarize.method="tukeybiweight"}:
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{summarize.select}: \\
+{\tt none}:   \> scheme mask is not changed by selector (default) 
+\end{tabbing}
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{summarize.logbase}: \\
+{\tt logbase}: \> "0" - linear, "log", "log2", "log10" - log with base e, 2, 10
+\end{tabbing}
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{summarize.params}: \\
+{\tt tau}:       \> contrast tau (default: 0.03) \\
+{\tt scaletau}:  \> scale tau (default: 10) \\
+{\tt delta}:     \> delta for probe value calculation (default: 2.0e-20) \\
+{\tt c}:         \> a tuning constant (default: 5.0) \\
+{\tt eps}:       \> small value to avoid zeros in division (default: 0.0001) \\
+{\tt neglog}:    \> substitution for logarithm of negative values (default: 1.0) \\
+{\tt noisefrac}: \> fraction of global background variation (default: 0.5)
+\end{tabbing}
+
+The MAS5 \Rcode{tukeybiweight} summarization is computed as follows (here we use the 
+background-corrected intensities \Rcode{bgrd.mas} w/o normalization): 
+<<eval=FALSE>>=
+expr.tbw <- express(bgrd.mas, "ExprTukey", filedir=outdir, update=FALSE, 
+            summarize.method="tukeybiweight", summarize.select="none", summarize.option="transcript",
+            summarize.logbase="log2", summarize.params=c(0.03, 10.0, 2.0e-20, 5.0, 0.0001, 1.0, 0.5))
+@
+
+\pagebreak
+
+Now we can draw density plots and boxplots of the final expression values:
+<<eval=FALSE>>=
+hist(expr.tbw)
+boxplot(expr.tbw) 
+@
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=70mm]{DensityPlot_ExprTukey.png}
+  \includegraphics[width=70mm]{BoxPlot_ExprTukey.png}
+%  \caption{xxx}
+%  \label{xxx}
+\end{center}
+\end{figure}
+
+As the boxplot reveals no probe-level normalization was done since the MAS5 algorithm usually 
+scales the expression levels to a certain target intensity (see function \Rcode{normalize}). \\
+
+In addition we can draw scatter plots between expression values at the transcript-level:
+<<eval=FALSE>>=
+expr  <- validData(expr.tbw)
+plot(log2(expr[,1]), log2(expr[,2]), xlab="BreastA", ylab="BreastB")
+plot(log2(expr[,1]), log2(expr[,4]), xlab="BreastA", ylab="ProstateA")
+@
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=70mm]{ScatterPlot_ExprTukey_BrABrB.png}
+  \includegraphics[width=70mm]{ScatterPlot_ExprTukey_BrAPrA.png}
+%  \caption{xxx}
+%  \label{xxx}
+\end{center}
+\end{figure}
+
+\pagebreak
+
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{dfw}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+This multichip summarization method uses the Tukey weight function to give probes with unusually 
+high or low variability across arrays small weights. These weighted probe intensities are used 
+to obtain the summarized expression values \citep{chen:etal:2007}. 
+When using function \Rfunction{express()} the following \Rcode{summarize} parameters can be used 
+for \Rcode{summarize.method="dfw"}:
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{summarize.select}: \\
+{\tt pmonly}: \> only PM probes are selected (default) \\ 
+{\tt mmonly}: \> only MM probes are selected \\ 
+{\tt both}:   \> both PM and MM probes are selected
+\end{tabbing}
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{summarize.logbase}: \\
+{\tt logbase}: \> "0" - linear, "log", "log2", "log10" - log with base e, 2, 10
+\end{tabbing}
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{summarize.params}: \\
+{\tt m}: \> exponent for range WR (default: 3) \\
+{\tt n}: \> exponent for stdev WSD (default: 1) \\
+{\tt c}: \> scale parameter (default: 0.01)
+\end{tabbing}
+
+The \Rcode{dfw} summarization is computed as follows (w/o background correction):
+<<eval=FALSE>>=
+expr.dfw <- express(norm.qu, "ExprDFW", filedir=outdir, update=FALSE, 
+            summarize.method="dfw", summarize.select="pmonly", summarize.option="transcript",
+            summarize.logbase="log2", summarize.params=c(3.0, 1.0, 0.01))
+@
+
+Now we can draw density plots and boxplots of the final expression values:
+<<eval=FALSE>>=
+hist(expr.dfw)
+boxplot(expr.dfw) 
+@
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=70mm]{DensityPlot_ExprDFW.png}
+  \includegraphics[width=70mm]{BoxPlot_ExprDFW.png}
+%  \caption{xxx}
+%  \label{xxx}
+\end{center}
+\end{figure}
+
+In addition we can draw scatter plots between expression values at the transcript-level:
+<<eval=FALSE>>=
+expr  <- validData(expr.dfw)
+plot(log2(expr[,1]), log2(expr[,2]), xlab="BreastA", ylab="BreastB")
+plot(log2(expr[,1]), log2(expr[,4]), xlab="BreastA", ylab="ProstateA")
+@
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=70mm]{ScatterPlot_ExprDFW_BrABrB.png}
+  \includegraphics[width=70mm]{ScatterPlot_ExprDFW_BrAPrA.png}
+%  \caption{xxx}
+%  \label{xxx}
+\end{center}
+\end{figure}
+
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{farms}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+This multichip summarization method is based on a factor analysis model for which a Bayesian 
+maximum a posteriori method optimizes the model parameters under the assumption of Gaussian 
+measurement noise. Afterwards, the expression levels are estimated from the model 
+\citep{hochr:etal:2006}. 
+When using function \Rfunction{express()} the following \Rcode{summarize} parameters can be used 
+for \Rcode{summarize.method="farms"}:
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{summarize.select}: \\
+{\tt pmonly}: \> only PM probes are selected (default) \\ 
+{\tt mmonly}: \> only MM probes are selected \\ 
+{\tt both}:   \> both PM and MM probes are selected
+\end{tabbing}
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{summarize.logbase}: \\
+{\tt logbase}: \> "0" - linear, "log", "log2", "log10" - log with base e, 2, 10
+\end{tabbing}
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{summarize.params}: \\
+{\tt version}:  \> version of farms package, 131 (farms\_1.3.1); 130 (farms\_1.3) (default: 131) \\
+{\tt weight}:   \> hyperparameter (default: 0.5) \\
+{\tt mu}:       \> hyperparameter (default: 0.0) \\
+{\tt scale}:    \> scaling parameter (default: 1.0) \\
+{\tt tol}:      \> termination tolerance (default: 0.00001) \\
+{\tt cyc}:      \> maximum number of cycles (default: 100) \\
+{\tt weighted}: \> weighted mean (for 131 only) (default: 1.0)
+\end{tabbing}
+
+The default \Rcode{farms} summarization is computed as follows (w/o background correction):
+<<eval=FALSE>>=
+expr.frm <- express(norm.qu, "ExprFARMS", filedir=outdir, update=FALSE, 
+            summarize.method="farms", summarize.select="pmonly", summarize.option="transcript",
+            summarize.logbase="log2", summarize.params=c(131, 0.5, 0.0, 1.0, 0.00001, 100, 1))
+@
+
+\pagebreak
+
+Now we can draw density plots and boxplots of the final expression values:
+<<eval=FALSE>>=
+hist(expr.frm)
+boxplot(expr.frm) 
+@
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=70mm]{DensityPlot_ExprFARMS.png}
+  \includegraphics[width=70mm]{BoxPlot_ExprFARMS.png}
+%  \caption{xxx}
+%  \label{xxx}
+\end{center}
+\end{figure}
+
+In addition we can draw scatter plots between expression values at the transcript-level:
+<<eval=FALSE>>=
+expr  <- validData(expr.frm)
+plot(log2(expr[,1]), log2(expr[,2]), xlab="BreastA", ylab="BreastB")
+plot(log2(expr[,1]), log2(expr[,4]), xlab="BreastA", ylab="ProstateA")
+@
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=70mm]{ScatterPlot_ExprFARMS_BrABrB.png}
+  \includegraphics[width=70mm]{ScatterPlot_ExprFARMS_BrAPrA.png}
+%  \caption{xxx}
+%  \label{xxx}
+\end{center}
+\end{figure}
+
+{\bf Note:} Although package \Rpackage{farms} is available under the GNU GPL License,
+the authors state on their web site that: "This package (i.e. \Rpackage{farms\_1.x}) is only free 
+for non-commercial users. Non-academic users must have a valid license." Since I do not know 
+if this statement applies for my C++ implementation, too, it is recommended that respective 
+users contact the authors of the original package. 
+
+
+%-----------------------------------------------------------------------
+\section{Probeset-level Normalization using \Rfunction{normalize()}}
+%-----------------------------------------------------------------------
+
+Currently the following probeset-level normalization methods are available as \Rcode{method}:
+\begin{itemize}
+\item {\tt mean}: all arrays are scaled so that they have the same trimmed mean value.
+\item {\tt median}: all arrays are scaled so that they have the same median value.
+\item {\tt lowess}: each array is normalized to a reference array using locally-weighted polynomial 
+ regression.
+\item {\tt supsmu}: each array is normalized to a reference array by applying Friedmann's super 
+ smoother.
+\end{itemize}
+
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{mean/median (mas)}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+All arrays are scaled so that they have the same mean/median value. This value is determined 
+either by the mean/median value of a reference tree or by a given target intensity.
+When using function \Rfunction{normalize()} the following parameters can be used 
+for \Rcode{method="mean"} or for \Rcode{method="median"}, respectively:
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{select}: \\
+{\tt separate}:  \> use separate mask for each normalization (default) \\ 
+{\tt together}:  \> use combined masks for normalization
+\end{tabbing}
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{normalize.option = "<option>:<dataopt>"}: \\
+{\tt option}:  \> use unit tree for "transcript", "exon", "probeset" \\
+{\tt dataopt}: \> applied to "all" selected probes
+\end{tabbing}
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{normalize.logbase}: \\
+{\tt logbase}: \> "0" - linear, "log", "log2", "log10" - log with base e, 2, 10
+\end{tabbing}
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{normalize.params}: \\
+{\tt trim}:        \> trim value for trimmed mean (only for method "mean") \\
+{\tt targetinten}: \> if > 0 then scale mean/median to value of target intensity
+\end{tabbing}
+
+The trimmed \Rcode{mean} probeset-level normalization is computed as follows:
+<<eval=FALSE>>=
+nrxp.mn <- normalize(expr.tbw,  "NrmExpMean", filedir=outdir, update=FALSE, 
+           select="separate", method="mean", option="transcript:all", logbase="0", 
+           refindex=1, refmethod="mean", params=c(0.02, 500))
+@
+
+Here the reference index is set to \Rcode{refindex=1} to prevent computing a mean reference 
+tree which will not be used since the intensities are normalized to target intensity 500 and not 
+to a reference tree. \\ 
+
+Now we can draw density plots and boxplots of the normalized expression values:
+<<eval=FALSE>>=
+hist(nrxp.mn)
+boxplot(nrxp.mn) 
+@
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=70mm]{DensityPlot_NrmExpMean.png}
+  \includegraphics[width=70mm]{BoxPlot_NrmExpMean.png}
+%  \caption{xxx}
+%  \label{xxx}
+\end{center}
+\end{figure}
+
+\pagebreak
+
+{\bf Note:} Probeset-level normalization is usually necessary for the MAS4 and MAS5 algorithms, 
+since no probe-level normalization is done and the average expression level (after removing the 2\% 
+highest and lowest expression values)  \citep{affy:tech:2002} is usually scaled to a "Target 
+Intensity" such as \Rcode{targetinten=500} for expression arrays or \Rcode{targetinten=100} for 
+exon arrays. 
+
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{lowess}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Each array is normalized to a reference array using locally-weighted polynomial regression. The 
+reference array can be one of the arrays or the mean/median of all arrays.
+When using function \Rfunction{normalize()} the following parameters can be used 
+for \Rcode{method="lowess"}:
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{select}: \\
+{\tt separate}:  \> use separate mask for each normalization (default) \\ 
+{\tt together}:  \> use combined masks for normalization
+\end{tabbing}
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{option = "<option>:<dataopt>"}: \\
+{\tt option}:  \> use unit tree for "transcript", "exon", "probeset" \\
+{\tt dataopt}: \> applied to "all" probes, selected "sel" probes only, or percentage probes (range (0,1])
+\end{tabbing}
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{logbase}: \\
+{\tt logbase}: \> "0" - linear, "log", "log2", "log10" - log with base e, 2, 10
+\end{tabbing}
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{params}: \\
+The following parameters are necessary:  \\
+{\tt span}: \> smoother span (default: 2/3) \\
+{\tt iter}: \> number of robustifying iterations (default: 3) \\
+{\tt rule}: \> 0, 1 or 2, determines how approx interpolation should be done at ends \\
+{\tt f}:    \> for approx method "constant" a value between 0 and 1 (not used)
+\end{tabbing}
+
+The \Rcode{lowess} probeset-level normalization is computed as follows:
+<<eval=FALSE>>=
+nrxp.low <- normalize(expr.tbw,  "tmp_NrmExpLow", filedir=outdir, update=FALSE, 
+            select="separate", method="lowess", option="transcript:all", logbase="log2", 
+            refindex=0, refmethod="mean", params=c(0.67, 3, 0.0, 0.0))
+@
+
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{supsmu}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Each array is normalized to a reference array by applying Friedmann's super smoother. The 
+reference array can be one of the arrays or the mean/median of all arrays.
+When using function \Rfunction{normalize()} the following parameters can be used 
+for \Rcode{method="supsmu"}:
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{select}: \\
+{\tt separate}:  \> use separate mask for each normalization (default) \\ 
+{\tt together}:  \> use combined masks for normalization
+\end{tabbing}
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{option = "<option>:<dataopt>"}: \\
+{\tt option}:  \> use unit tree for "transcript", "exon", "probeset" \\
+{\tt dataopt}: \> applied to "all" probes, selected "sel" probes only, or percentage probes (range (0,1])
+\end{tabbing}
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{logbase}: \\
+{\tt logbase}: \> "0" - linear, "log", "log2", "log10" - log with base e, 2, 10
+\end{tabbing}
+
+\begin{tabbing}
+xxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\kill
+Settings to be used for \Rcode{params}: \\
+The following parameters are necessary:  \\
+{\tt bass}: \> controls smoothness of fitted curve (default: 0.0) \\
+{\tt span}: \> fraction of observations in span (default: 0.0) \\
+{\tt rule}: \> 0, 1 or 2, determines how approx interpolation should be done at ends \\
+{\tt f}:    \> for approx method "constant" a value between 0 and 1 (not used)
+\end{tabbing}
+
+The \Rcode{supsmu} probeset-level normalization is computed as follows:
+<<eval=FALSE>>=
+nrxp.sup <- normalize(expr.tbw,  "tmp_NrmExpSupR2", filedir=outdir, update=FALSE, 
+            select="separate", method="supsmu", option="transcript:all", logbase="log2", 
+            refindex=0, refmethod="mean", params=c(0.0, 0.0, 2, 0.0))
+@
+
+
+
+
+
+\bibliographystyle{plainnat}
+\bibliography{xps}
+
+\end{document}

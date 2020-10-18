@@ -1,0 +1,1197 @@
+%\VignetteIndexEntry{1. XPS Vignette: Overview}
+%\VignetteDepends{xps}
+%\VignetteKeywords{Expression, Affymetrix, Oligonucleotide Arrays}
+%\VignettePackage{xps}
+\documentclass{article}
+
+\usepackage{hyperref}
+\usepackage[authoryear,round]{natbib}
+
+\textwidth=6.2in
+\textheight=8.5in
+%\parskip=.3cm
+\oddsidemargin=.1in
+\evensidemargin=.1in
+\headheight=-.3in
+
+\newcommand{\Rfunction}[1]{{\texttt{#1}}}
+\newcommand{\Rmethod}[1]{{\texttt{#1}}}
+\newcommand{\Rcode}[1]{{\texttt{#1}}}
+\newcommand{\Robject}[1]{{\texttt{#1}}}
+\newcommand{\Rpackage}[1]{{\textsf{#1}}}
+\newcommand{\Rclass}[1]{{\textit{#1}}}
+\newcommand{\xps}{\Rpackage{xps}}
+\newcommand{\ROOT}{\Robject{ROOT}}
+
+\begin{document}
+
+\title{Introduction to the xps Package: Overview}
+\date{October, 2015}
+\author{Christian Stratowa}
+\maketitle
+
+\tableofcontents
+
+\section{Introduction}
+
+Affymetrix GeneChip oligonucleotide arrays use several probes to assay each 
+targeted transcript. Specialized algorithms have been developed to summarize 
+low-level probe set intensities to get one expression measure for each transcript. 
+Some of these  methods, such as MAS 4.0's AvDiff \citep{affy4}, MAS5's signal
+\citep{affy5} or RMA  \citep{iriz:etal:2003}, are implemented in package
+\Rpackage{affy} \citep{gaut:cope:bols:iriz:2003}. Further methods, such as 
+FARMS \citep{hochr:etal:2006} or DFW \citep{chen:etal:2007} are custom methods 
+that can be registered for use with package \Rpackage{affy}. 
+
+Advantages in technology allow Affymetrix to supply whole-genome expression arrays 
+such as the new GeneChip Exon array systems (Exon 1.x ST) and Gene array systems 
+(Gene 1.x ST). The amount of data created with the new exon arrays poses a great 
+challenge, since R stores all objects in memory. 
+
+Package \xps\ ~- \Rclass{eXpression Profiling System} - is designed to analyze 
+Affymetrix GeneChip expression and exon arrays on computers with limited amounts 
+of memory (1 GB RAM). To achieve this goal, \xps\  takes advantage of \ROOT, a 
+framework especially developed to handle and analyse large amounts of data in a 
+memory efficient way.
+ 
+\noindent{\bf Important installation note:}
+Package \xps\ is based on two powerful frameworks, namely \Robject{R} and \ROOT. 
+It is thus absolutely essential to install the \ROOT\ framework before \xps\ can 
+be built and installed. For instructions how to install \ROOT\ see the README file
+provided with package \xps.
+
+
+\section{Why ROOT?}
+
+ROOT (\url{http://root.cern.ch}) is an object-oriented framework that has been 
+developed at CERN for distributed data warehousing and data mining of particle 
+data in the petabyte range, such as the data created with the new LHC collider. 
+Data are stored as sets of objects in machine-independent files, and specialized storage 
+methods are used to get direct access to separate attributes of selected data objects. 
+For more information see the ROOT User Guide (The ROOT \citet{root:2009}).
+
+Taking advantage of these features, package \xps\ stores all data in portable \ROOT\ files. 
+Data describing microarray layout, probe information and metadata for genes are stored 
+as \ROOT\ Trees in \Rclass{scheme} files, accessible from \Robject{R} as \Rclass{scheme} objects. 
+Raw probe intensities, i.e. CEL-files for each project are stored as \ROOT\ Trees in 
+\Rclass{data} files, accessible from \Robject{R} as \Rclass{data} objects. All analysis is done 
+independent of \Robject{R} such avoiding inherent memory limitations. 
+
+{\bf Note:} Absolutely no knowledge of \ROOT\ is required to use package \xps. However,
+the interested user could use package \xps\ independent of \Robject{R} by writing \ROOT\ macros,
+examples of which can be found in file "macro4XPS.C", located in subdirectory xps/examples.
+
+
+\section{Getting Started}
+
+First you need to load the \xps\ package.
+\begin{Sinput}
+R> library(xps)
+\end{Sinput}
+<<echo=FALSE>>=
+library(xps)
+@
+
+As an initial step, which needs to be done only once, you must import Affymetrix chip 
+definition files, probe files and annotation files for all arrays that you are using, 
+into \ROOT\ \Rclass{scheme} files. This is described in Appendix A1, here we
+use the \ROOT\ \Rclass{scheme} file supplied with the package.
+
+Throughout this tutorial we will use a set of four {\it CEL} files supplied with the
+package. The necessary \ROOT\ \Rclass{scheme} file \Rclass{SchemeTest3.root} for GeneChip 
+{\it Test3.CDF} is also supplied as well as the \ROOT\ \Rclass{data} file 
+\Rclass{DataTest3\_cel.root}. These files need to be loaded for every new \Robject{R}-session,
+unless the session has been saved.
+
+{\bf Note:} Please see Appendix A2 for many additional examples on how to use \xps.
+
+
+\subsection{Reading CEL file information}
+
+The {\it CEL} files can be located in a common directory or in different directories, see 
+\Rcode{?import.data} how to import {\it CEL} files from different directories. {\it CEL} files 
+will be imported into a \ROOT\ \Rclass{data} file as \ROOT\ \Rclass{Trees}. Once the \ROOT\ 
+\Rclass{data} file is created, the {\it CEL} files are no longer needed, since subsequent 
+\Robject{R}-sessions need only load the \ROOT\ \Rclass{data} file. However, it is possible to 
+load only a subset  of {\it CEL} files, and it is also possible to save new {\it CEL} files in 
+the same \ROOT\ \Rclass{data} file at a later time. In this demo we will show how to achieve this.
+
+First we load the \xps\ package.
+<<results=hide>>=
+library(xps)
+@
+
+For this demonstration {\it CEL} files are located in a common directory, in our case in:
+<<>>=
+celdir <- file.path(path.package("xps"), "raw")
+@ 
+
+Since our {\it CEL} files were created for GeneChip {\it Test3.CDF}, we need to load
+the corresponding \ROOT\ \Rclass{scheme} file first:
+<<>>=
+scheme.test3 <- root.scheme(file.path(path.package("xps"), "schemes", "SchemeTest3.root"))
+@ 
+
+Now we can import the {\it CEL} files, in our case a subset first:
+<<>>=
+celfiles <- c("TestA1.CEL","TestA2.CEL")
+data.test3 <- import.data(scheme.test3, "tmpdt_DataTest3", celdir=celdir, celfiles=celfiles, verbose=FALSE)
+@ 
+
+To see, which {\it CEL} files were imported as \ROOT\ \Rclass{Trees}, we can do:
+<<>>=
+unlist(treeNames(data.test3))
+@ 
+
+Now we can import additional {\it CEL} files:
+<<>>=
+celfiles <- c("TestB1.CEL","TestB2.CEL")
+data.test3 <- addData(data.test3, celdir=celdir, celfiles=celfiles, verbose=FALSE)
+@ 
+
+Instead of getting the imported tree names from the created instance \Rclass{data.test3} 
+of S4 class \Rclass{DataTreeSet}, we can also get the tree names directly from the \ROOT\ 
+\Rclass{data} file: 
+<<>>=
+getTreeNames(rootFile(data.test3))
+@ 
+
+Now we have all {\it CEL} files imported as \ROOT\ \Rclass{Trees}. In later \Robject{R}-sessions
+we only need to load the corresponding \ROOT\ \Rclass{data} file using function 
+\Rfunction{root.data()}. In this tutorial we will not use the file just created but
+the \ROOT\ \Rclass{data} file \Rclass{DataTest3\_cel.root}. \\
+
+
+{\bf Note 1:} It is also possible to import `phenotypic-data' describing samples and 
+further project--relevant data for the experiment, see S4 class \Rclass{ProjectInfo}.
+
+{\bf Note 2:} Since \ROOT\ \Rclass{data} files contain the raw data, it is recommended 
+to create them in a common system directory, e.g. 'rootdata', which is accessible to 
+other users, too.
+
+{\bf Note 3:} In order to distinguish \ROOT\ \Rclass{data} files containing the raw data 
+from other \ROOT\ files, extension `\_cel' is automatically added to the file name. Thus
+creating a raw data file with name \Rclass{DataTest3} will result in a \ROOT\ file with
+name \Rclass{DataTest3\_cel.root}. Extension `root' is always added to each \ROOT\ file.
+
+{\bf Note 4:} Usually, \ROOT\ \Rclass{data} files are kept permanently. Thus it is not
+possible to accidently overwrite a \ROOT\ \Rclass{data} file with another file of the
+same name; you will get an error message. If you want to create a temporary \ROOT\ 
+\Rclass{data} file, which can be overwritten, the name must start with `tmp\_'. However, 
+in the example above we needed to use `tmpdt\_' otherwise R CMD check would produce 
+an error on Windows. Please note that `tmpdt\_' will not work with function 
+\Rfunction{import.data()} for the reason described in Note 3 above.
+
+{\bf Note 5:} It is highly recommended to keep the default setting \Rcode{verbose=TRUE}, 
+especially when working with exon arrays. On Windows you will see the verbose messages
+only when starting \Robject{R} from the command line, i.e. using RTerm.
+
+
+\subsection{Accessing raw data}
+
+Currently, the data from the imported {\it CEL} files are saved as \ROOT\ \Rclass{Trees} 
+in the \ROOT\ \Rclass{data} file, however, they are not accessible from  within \Robject{R}.
+The corresponding slot \Rcode{data} of instance \Rclass{data.test3} of S4 class \Rclass{DataTreeSet},
+a data.frame, is empty. This setting allows to import e.g. an (almost) unlimited  number
+of {\it CEL} files from GeneChip Exon arrays on computers with 1GB RAM only.
+
+When we try to access the raw data, we get:
+<<>>=
+tmp <- intensity(data.test3)
+head(tmp)
+@
+
+Thus, we need to attach the raw data first to \Rclass{data.test3}:
+<<results=hide>>=
+data.test3 <- attachInten(data.test3)
+@
+
+Now we get:
+<<>>=
+tmp <- intensity(data.test3)
+head(tmp)
+@
+
+Alternatively, it is also possible to attach only a subset to the current object 
+\Rclass{data.test3}, or to a copy \Rclass{subdata.test3}:
+<<>>=
+subdata.test3 <- attachInten(data.test3, c("TestB1.cel","TestA2"))
+tmp <- intensity(subdata.test3)
+head(tmp)
+@
+
+
+Often it is useful to obtain the intensities for a certain probeset only. As an example let 
+us find the intensities for probeset '93822\_at'. For this purpose we need to get the internal 
+UNIT\_ID first:
+<<>>=
+data.test3 <- attachUnitNames(data.test3)
+id <- transcriptID2unitID(data.test3, transcriptID="93822_at", as.list=FALSE)
+id
+@
+
+If we know the gene symbol, we could also do:
+<<>>=
+id <- symbol2unitID(data.test3, symbol="Rpl37a", as.list=FALSE)
+id
+@
+
+Now we can extract the PM intensities for the UNIT\_ID:
+<<>>=
+data <- validData(data.test3, which="pm", unitID=id)
+data
+@
+
+To avoid the above message that slot 'mask' is empty we can do:
+
+<<>>=
+data.test3 <- attachMask(data.test3)
+@
+
+
+\pagebreak
+Finally we can plot the PM and MM intensities, in this case for a subset only.
+\begin{center}
+<<probesetplot, fig=TRUE>>=
+probesetplot(data.test3, unitID="93822_at", unittype="transcript", which="both", names=c("TestA1","TestA2"), add.legend="topright")
+@
+\end{center}
+
+
+When we no longer need the raw data, we can remove them from \Rclass{data.test3},
+thus avoiding memory consumption of \Robject{R}:
+<<>>=
+data.test3 <- removeInten(data.test3)
+tmp <- intensity(data.test3)
+head(tmp)
+@
+
+This step is not necessary for small datasets or if the computer has sufficient RAM.
+
+
+
+\pagebreak
+\section{Converting raw data to expression measures}
+
+When we start a new \Robject{R}-session, it is necessary to load the \ROOT\ \Rclass{scheme} 
+and \ROOT\ \Rclass{data} files first:
+<<results=hide>>=
+library(xps)
+scheme.test3 <- root.scheme(file.path(path.package("xps"), "schemes", "SchemeTest3.root"))
+data.test3 <- root.data(scheme.test3, file.path(path.package("xps"),"rootdata", "DataTest3_cel.root"))
+@
+This step is not necessary when objects \Rclass{scheme.test3} and \Rclass{data.test3} are 
+already saved in an \Robject{R}-session. \\
+
+Converting raw data to expression measures and computing detection calls is fairly simple.
+It is not necessary to attach any \Rcode{data} or \Rcode{mask} data.frames, since all
+computations are done independently from \Robject{R}.
+
+
+\subsection{Calculating expression levels}
+
+Let us first preprocess the raw data using method `RMA' to compute expression levels, and
+store the results as \ROOT\ \Rclass{Trees} in \ROOT\ file \Rclass{tmpdt\_Test3RMA.root}:
+<<results=hide>>=
+data.rma <- rma(data.test3, "tmpdt_Test3RMA", verbose=FALSE)
+@
+
+{\bf Note:} In this example and the following examples we suppress the usual output.
+Furthermore, once again we use `tmpdt\_', which adds date and time to the tmp-file, 
+otherwise R CMD check would produce an error on Windows. Usually, you want to create a 
+permanent file, however, if you want to create a temporary file it is recommended to 
+use `tmp\_' as temporary file which will be overwritten. \\
+
+Then we preprocess the raw data using method `MAS5' to compute expression levels, and
+store the results in \ROOT\ file \Rclass{tmpdt\_Test3MAS5.root}:
+<<results=hide>>=
+data.mas5 <- mas5(data.test3, "tmpdt_Test3MAS5", normalize=TRUE, sc=500, update=TRUE, verbose=FALSE)
+@
+
+Now we want to compare the results by plotting the expression levels for the first sample.
+For this purpose we need to extract the expression levels from the resulting S4 classes 
+\Rclass{ExprTreeSet} as data.frames first:
+<<>>=
+expr.rma  <- validData(data.rma)
+expr.mas5 <- validData(data.mas5)
+@
+Now we can plot the results for the first sample:
+
+\begin{center}
+<<plot, fig=TRUE>>=
+plot(expr.rma[,1],expr.mas5[,1],log="xy",xlim=c(1,20000),ylim=c(1,20000))
+@
+\end{center}
+
+{\bf Note:} For both methods, `RMA' and `MAS5', true expression levels are extracted,
+which is in contrast to other packages which extract the $\log_2$-values for `RMA'.
+
+
+\subsection{Calculating detection calls}
+
+Let us now compute the MAS5 detection calls:
+<<results=hide>>=
+call.mas5 <- mas5.call(data.test3,"tmpdt_Test3Call", verbose=FALSE)
+@
+
+Alternatively, let us compute the DABG (detection above background) calls:
+<<results=hide>>=
+call.dabg <- dabg.call(data.test3,"tmpdt_Test3DABG", verbose=FALSE)
+@
+{\bf Note:} YES, in principle it is indeed possible to compute the DABG call not only 
+for exon arrays but for expression arrays, too. However, computation may take a long
+time, e.g. on a computer with 2.3GHz Intel Core 2 Duo processor and 2GB RAM, computing
+DABG calls for HG-U133\_Plus\_2 arrays will take about 45 min/array. \\
+
+
+\pagebreak
+Both, detection call and detection p-value can be extracted as \Robject{data.frame}:
+<<>>=
+pres.mas5 <- presCall(call.mas5)
+head(pres.mas5)
+@
+
+<<>>=
+pval.mas5 <- pvalData(call.mas5)
+head(pval.mas5)
+@
+
+
+
+\section{Quality control through data exploration}
+
+Quality Control (QC) assessment is a crucial step in successful analysis of microarray data, 
+it has to be done at every step of the analysis. For this purpose every S4 class of package 
+\xps\ provides it's own set of methods. In addition \xps\ contains a special S4 class, called  
+\Rclass{QualTreeSet}, to allow a more extensive quality control. 
+
+
+\subsection{\Rclass{DataTreeSet} based evaluation of raw data}
+
+Class \Rclass{DataTreeSet} allows an initial evaluation of the quality of the raw data. 
+
+\pagebreak
+\subsubsection{Basic quality plots}
+
+As a first step we want create some plots with the raw data. 
+
+{\bf Note:} Since the following plots import the necessary data directly from the \ROOT\ 
+\Rclass{data} file it is no longer necessary to \Rfunction{attachInten()}. \\
+
+First, we create a density plot:
+
+\begin{center}
+<<hist, fig=TRUE>>=
+hist(data.test3)
+@
+\end{center}
+
+\pagebreak
+The corresponding boxplots are:
+
+\begin{center}
+<<boxplot, fig=TRUE>>=
+boxplot(data.test3, which="userinfo:fIntenQuant")
+@
+\end{center}
+
+{\bf Note:} Using parameter \Rcode{which} with \Rcode{userinfo} allows to use pre-calculated 
+quantile values for function \Rfunction{boxplot()}, see the help \Rcode{?treeInfo}. This 
+allows to use \Rfunction{boxplot()} without the need to fill slot \Rcode{data}. 
+
+\pagebreak
+It is also possible to create an image for e.g. sample TestA1:
+
+\begin{center}
+<<image, fig=TRUE>>=
+image(data.test3, names="TestA1.cel")
+@
+\end{center}
+
+{\bf Note 1:} With the current version of package \xps\ the above plots no longer depend on 
+filling slot \Rcode{data} using function \Rfunction{attachInten()}. Instead, all data will be 
+imported from the corresponding \ROOT\ \Rclass{data} file on demand. Thus, it is now possible 
+to apply functions \Rfunction{hist()}, \Rfunction{boxplot()} and \Rfunction{image()}, respectively, 
+to datasets containing many samples, and to exon array data on computers with 1-2 GB RAM only. \\
+
+{\bf Note 2:} In addition to the R-graphics, package \xps\ also supports \ROOT\ graphics as 
+an alternative possibility to create plots from large data. This is described in Appendix A4. \\
+
+
+\pagebreak
+\subsubsection{Additional quality assessment}
+
+As an additional QC step we include a PM-MM-plot of the data. However, in this case we need 
+not only attach the raw data, as shown above, but also slot \Rcode{mask} of \Rclass{scheme.test3},
+since  slot \Rcode{mask} contains the information which oligos on the array are PM, MM,
+or control oligos, respectivly. See Appendix A1 for an explanation and how  
+to avoid this step.
+<<results=hide>>=
+data.test3 <- attachMask(data.test3)
+data.test3 <- attachInten(data.test3)
+@
+
+{\bf Note:} We have applied method \Rfunction{attachMask()} to \Rclass{data.test3} and not
+to \Rclass{scheme.test3}, since \Rclass{data.test3} contains its  own copy of 
+\Rclass{scheme.test3}. \\
+
+Now we create the PM-MM-plot:
+
+\begin{center}
+<<pmplot, fig=TRUE>>=
+pmplot(data.test3)
+@
+\end{center}
+
+After we are done, we remove the data from \Rclass{data.test3} to free \Robject{R} memory:
+<<>>=
+data.test3 <- removeInten(data.test3)
+data.test3 <- removeMask(data.test3)
+@
+
+
+Since the dependence of intensity on probe sequence is a well established fact it may be of 
+interest to visualize the influence that the G/C content of all probes has on the intensity 
+distribution of each hybridization. For this purpose we can draw boxplots of the $\log_2$-intensities 
+as a function of the G/C content. \\
+
+First we need to attach the pre-computed G/C content to slot \Rcode{probe} and optionally also 
+slot \Rcode{mask}:
+<<results=hide>>=
+data.test3 <- attachProbeContentGC(data.test3)
+data.test3 <- attachMask(data.test3)
+@
+
+Now we can create the boxplot of probe intensities stratified by GC content:
+
+\begin{center}
+<<intensity2GCplot, fig=TRUE>>=
+intensity2GCplot(data.test3, treename = "TestA1.cel", which="mm")
+@
+\end{center}
+
+Here we have have used the MM probes only to demonstrate the strong dependency of the background 
+$\log_2$-intensities of sample "TestA1.cel" on the number of G or C bases in the probe sequency. \\
+
+After we are done, we remove the data from \Rclass{data.test3} to free \Robject{R} memory:
+<<>>=
+data.test3 <- removeMask(data.test3)
+data.test3 <- removeProbeContentGC(data.test3)
+@
+
+
+\pagebreak
+\subsection{\Rclass{ExprTreeSet} based evaluation of normalized expression measures}
+
+Class \Rclass{ExprTreeSet} has some methods to assess the quality of expression measures. 
+
+\subsubsection{Basic quality plots}
+
+In the following sections we want to create some quality plots for the expression levels. In contrast 
+to the raw data, expression levels are already stored in slot \Rcode{data} of S4 class\Rclass{ExprTreeSet}, 
+e.g. in \Rclass{data.rma}. \\
+
+First, we create a density plot:
+
+\begin{center}
+<<hist-rma, fig=TRUE>>=
+hist(data.rma, add.legend=TRUE)
+@
+\end{center}
+
+\pagebreak
+The corresponding boxplots are:
+
+\begin{center}
+<<boxplot-rma, fig=TRUE>>=
+boxplot(data.rma, bmar=list(b=9, cex.axis=0.8))
+@
+\end{center}
+
+\pagebreak
+It is also possible to create M vs A plots for one or more samples:
+
+\begin{center}
+<<mvaplot, fig=TRUE>>=
+mvaplot(data.rma, pch=20, ylim=c(-2,2), names="TestB1.mdp_LEVEL")
+@
+\end{center}
+
+
+
+\pagebreak
+\subsubsection{Additional quality assessment}
+
+Another possibility to identify problematic arrays is to do between array comparisons. For this 
+purpose we can compute between arrays correlations and between arrays distances. \\
+
+In order to correlate all arrays from an experiment with each other we compute the array-array 
+Spearman rank correlation coefficients and draw a heat map: 
+
+\begin{center}
+<<corplot-rma, fig=FALSE>>=
+corplot(data.rma, add.legend=TRUE)
+@
+\end{center}
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics{Corrplot_legend.png}
+%  \includegraphics[width=70mm]{Corrplot_legend.png}
+\end{center}
+\end{figure}
+
+Correlation plots are useful for detecting outliers, failed hybridizations, or mistracked samples. 
+Specifically, these plots can assess between array quality, e.g. arrays belonging to the 
+same set of replicates should show high correlations, and are able to show patterns that reveal 
+the experimental design. 
+
+
+\pagebreak
+Now let us determine the between arrays distances, computed as the MAD of the M-values of each 
+pair of arrays, and drawn as an array-array expression level distance plot (heat map): 
+
+\begin{center}
+<<madplot-rma, fig=FALSE>>=
+madplot(data.rma, add.legend=TRUE)
+@
+\end{center}
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics{MADplot_legend.png}
+%  \includegraphics[width=70mm]{MADplot_legend.png}
+\end{center}
+\end{figure}
+
+A MAD plot is an exploratory plot that can help detecting outlier arrays and batch effects: 
+If there is an outlier array you will see vertical and horizontal stripes of darker color in 
+the plot. Batch effects can be seen as blocks along the diagonal. 
+
+
+\pagebreak
+Finally we can plot the first two principal components from a principal components analysis (PCA). 
+This is used to show the overall structure of the data: 
+
+\begin{center}
+<<pcaplot-rma, fig=TRUE>>=
+pcaplot(data.rma, group=c("GrpA","GrpA","GrpB","GrpB"), add.labels=TRUE, add.legend=TRUE)
+@
+\end{center}
+
+PCA-plots can be very useful to detect outlier arrays between replicates as well as between 
+different groups. In most cases we expect replicates or groups to group together, indicating 
+general similarity in overall expression patterns.
+
+
+
+\pagebreak
+\subsection{\Rclass{CallTreeSet} based evaluation of detection calls}
+
+Another way to evaluate chip quality is to compare the percentage of present/absent calls. 
+Since the statistics is already pre-calcualted it can be obtained as follows: 
+
+<<>>=
+treeInfo(call.mas5, treetype="dc5", varlist ="userinfo:fPcAbsent:fPcMarginal:fPcPresent")
+@
+
+We can also plot the detection calls: 
+
+\begin{center}
+<<callplot, fig=TRUE>>=
+callplot(call.mas5)
+@
+\end{center}
+
+
+
+\pagebreak
+\subsection{\Rclass{QualTreeSet} based quality assessment}
+
+In addition to the quality assessments presented above, the dedicated S4 Class \Rclass{QualTreeSet} 
+allows a detailed evalutation of raw data and normalized data by fitting probe level models: 
+
+<<results=hide>>=
+rlm.all <- fitRLM(data.test3,"tmpdt_Test3RLM", qualopt="all", option="transcript", verbose=FALSE)
+@
+
+
+\subsubsection{Evaluating chip quality}
+
+First we produce an RNA degradation plot, which can give some idea of how much degradation 
+of mRNA has occured:
+
+\begin{center}
+<<plotAffyRNAdeg-rlm, fig=TRUE>>=
+rnadeg <- AffyRNAdeg(rlm.all)
+plotAffyRNAdeg(rnadeg, add.legend=TRUE)
+@
+\end{center}
+
+{\bf Note:} Although RNA degradation plots were initially created for expression arrays only 
+function \Rfunction{AffyRNAdeg()} can also be applied to whole genome arrays and exon arrays. \\
+
+
+\pagebreak
+Next we create a "border elements plot" by analyzing the positive and negative control elements 
+on the outer edges of the Affymetrix arrays. This helps to visualise how consistent the hybridization
+is around the edges of the arrays: 
+
+\begin{center}
+<<borderplot-rlm, fig=TRUE>>=
+borderplot(rlm.all)
+@
+\end{center}
+
+Large variations in positive controls can indicate non-uniform hybridization or gridding problems. 
+Variations in the negative controls indicate background fluctuations. \\
+
+
+\pagebreak
+As a further test we create "Center Of Intensity" (COI) plots of positive and negative border 
+elements: 
+
+\begin{center}
+<<coiplot-rlm, fig=TRUE>>=
+coiplot(rlm.all)
+@
+\end{center}
+
+If the hybridization is uniform across the array, the location of the COI for the positive/negative 
+elements will be located at the physical center of the array. In this case \Rfunction{coiplot()} 
+will return \Rcode{NULL}. Spatial variations in the hybridization or misalignment of the grid used 
+to determine the cell intensities will cause the COI to move from center. Then the names of affected 
+samples will be returned. \\
+
+
+\pagebreak
+\subsubsection{Fitting probe level models}
+
+Chip pseudo-images are used to detect artifacts on arrays that could pose potential quality problems 
+such as e.g. bubbles or scratches on the chip. Weights and residuals from model fitting procedures 
+can be accessed using methods \Rmethod{weights()} and \Rmethod{residuals()}, respectively, and can be 
+graphically displayed using the method \Rmethod{image()}. \\
+
+As an example we plot a pseudo-image of one array with the "weights":
+
+\begin{center}
+<<image-rlm, fig=TRUE>>=
+image(rlm.all, type="weights", names="TestA1_raw.res", add.legend=FALSE)
+@
+\end{center}
+
+{\bf Note:} Chip pseudo-images can also be applied to whole genome arrays and exon arrays. \\
+
+
+\pagebreak
+Normalized Unscaled Standard Errors (NUSE) can also be used for assessing chip quality. The SE 
+estimates are normalized such that for each probe set the median standard error across all arrays 
+is equal to 1. An array were there are elevated standard errors relative to the other arrays is 
+typically of lower quality. Boxplots of NUSE values can be used to compare the arrays:
+
+\begin{center}
+<<nuseplot-rlm, fig=TRUE>>=
+nuseplot(rlm.all, names="namepart")
+@
+\end{center}
+
+{\bf Note:} Here we show NUSE plots for raw data, background-corrected data and normalized 
+data. However, usually boxplots are drawn for normalized data only: 
+
+<<eval=FALSE>>=
+nuseplot(rlm.all, names="namepart:normalized")
+@
+
+
+\pagebreak
+Relative Log Expression (RLE) plots are another useful measure to assess array quality. For each 
+probeset and array ratios are calculated between the log-expression of a probeset and the median 
+expression of this probeset across all arrays. Assuming that only few genes are differentially 
+expressed across arrays means that most of these RLE values will be centered close to 0. An RLE 
+boxplot can be produced using:
+
+\begin{center}
+<<rleplot-rlm, fig=TRUE>>=
+rleplot(rlm.all, names="namepart")
+@
+\end{center}
+
+{\bf Note:} Here we show RLE plots for raw data, background-corrected data and normalized 
+data. However, usually boxplots are drawn for normalized data only: 
+
+<<eval=FALSE>>=
+rleplot(rlm.all, names="namepart:normalized") 
+@
+
+
+
+\pagebreak
+\section{Filtering expression measures}
+
+The \xps\ package can also be used to filter (select) genes according to a variety of 
+different filtering mechanisms, similar to Bioconductor package \Rpackage{genefilter}.
+
+It is important to note that filters can be split into the non--specific filters and 
+the specific filters. Usually, non--specific filters are used to reduce the number of 
+genes remaining for further analysis e.g. by reducing the noise in the dataset. In 
+contrast, specific means that we are filtering with reference to a particular covariate. 
+For example we want to select genes that are differentially expressed in two groups. 
+Here we use the term `prefilter' for non--specific filters and the term `unifilter' for 
+specific filters applied to two groups.
+
+
+\subsection{Applying non--specific filters: PreFilter}
+
+Applying non--specific filters is a simple two-step process: First, select the filters
+of interest using constructor \Rcode{PreFilter}. Second, apply the resulting class 
+\Rclass{PreFilter} to an instance of class \Rclass{ExprTreeSet} using function \Rcode{prefilter}.
+
+
+Currently it is possible to select up to ten non--specific filters which are defined in 
+S4 class \Rclass{PreFilter}. For this example let us initialize the following three 
+non--specific filters:
+\begin{enumerate}
+\item \Rcode{madFilter}: A `median absolute deviation' filter, which selects only genes
+ where \Rcode{mad} across all samples is at least 0.5, i.e. \Rcode{mad >= 0.5}.
+\item \Rcode{lowFilter}: A `lower threshold' filter to select genes where the trimmed
+ mean of the \Rcode{log2}--expression levels is above 7.0 (with \Rcode{trim = 0.02}).
+\item \Rcode{highFilter}: An `upper threshold' filter to select genes that are
+ \Rcode{log2}--expressed below 10.5 in at least 80 percent of the samples.
+\end{enumerate}
+Furthermore, a gene should be selected for further analysis only if it satisfies at least 
+two of the three filters. \\
+
+
+Initialization of the filters is done using the constructor \Rcode{PreFilter}:
+<<results=hide>>=
+prefltr <- PreFilter(mad=c(0.5), lothreshold=c(7.0,0.02,"mean"), hithreshold=c(10.5,80.0,"percent"))
+str(prefltr)
+@
+
+This filter is then applied to expression data \Rclass{data.rma} created earlier, 
+using function \Rfunction{prefilter} with parameter \Rcode{minfilters=2}:
+<<echo=FALSE>>=
+data.rma@rootfile <- paste(path.package("xps"),"rootdata/tmp_Test3RMA.root",sep="/")
+data.rma@filedir  <- paste(path.package("xps"),"rootdata",sep="/")
+@
+
+<<results=hide>>=
+rma.pfr <- prefilter(data.rma, "tmpdt_Test3Prefilter", getwd(),
+                     filter=prefltr, minfilters=2, verbose=FALSE)
+@
+
+The resulting filter mask can be extracted as \Robject{data.frame}:
+<<>>=
+tmp <- validData(rma.pfr)
+head(tmp)
+dim(tmp[tmp[,"FLAG"]==1,])
+@
+
+The data show that 181 genes of the 345 genes on the Test3 GeneChip are selected for 
+further analysis.
+
+
+\subsection{Applying specific filters for two groups: UniFilter}
+
+Applying univariate filters is also a simple two-step process: First, select the 
+filters of interest using constructor \Rcode{UniFilter}. Second, apply the resulting 
+class \Rclass{UniFilter} to an instance of class \Rclass{ExprTreeSet} using function 
+\Rcode{unifilter}.
+
+Currently it is possible to select three univariate filters which are defined in 
+S4 class \Rclass{UniFilter}. For this example let us initialize the following two 
+filters:
+\begin{enumerate}
+\item \Rcode{fcFilter}: A `fold--change' filter, which selects only genes with an 
+ absolute fold--change of at least 1.3, i.e. \Rcode{abs(mean(GrpB)/mean(GrpA)) >= 1.3}.
+\item \Rcode{unitestFilter}: A `unitest' filter to select genes where the p--value of
+ the applied unitest, i.e. the \Rcode{t.test}, is less than 0.1 (\Rcode{pval <= 0.1}).
+\end{enumerate}
+Only genes satisfying both filters are considered to be differentially expressed. 
+
+{\bf Note:} If you want to change the default settings for \Rcode{t.test} and/or
+compute an adjusted p--value for multiple comparisons you need to initialize 
+method \Rcode{uniTest}, too. \\
+
+
+Initialization of the filters is done using the constructor \Rcode{UniFilter}:
+<<results=hide>>=
+unifltr <- UniFilter(foldchange=c(1.3,"both"), unifilter=c(0.1,"pval"))
+@
+
+This filter is then applied to expression data \Rclass{data.rma} using function 
+\Rfunction{unifilter} where parameter \Rcode{group} allocates each sample to one of 
+two groups. Furthermore, since we want to use only the pre--selected genes from 
+\Rfunction{prefilter} we need to set \Rcode{xps.fltr=rma.pfr}:
+<<echo=FALSE>>=
+data.rma@rootfile <- paste(path.package("xps"),"rootdata/tmp_Test3RMA.root",sep="/")
+data.rma@filedir  <- paste(path.package("xps"),"rootdata",sep="/")
+@
+
+<<results=hide>>=
+rma.ufr <- unifilter(data.rma, "tmpdt_Test3Unifilter", getwd(),
+                     unifltr, group=c("GrpA","GrpA","GrpB","GrpB"),
+                     xps.fltr=rma.pfr, verbose=FALSE)
+@
+
+The resulting data can be extracted as \Robject{data.frame}:
+<<>>=
+tmp <- validData(rma.ufr)
+tmp
+@
+
+The data show that only 9 genes of the pre--selected 181 genes are considered to be 
+differentially expressed. \\
+
+{\bf Note:} If you want to extract all data as \Robject{data.frame} as well as the 
+resulting filter mask you can do:
+<<results=hide>>=
+msk <- validFilter(rma.ufr)
+tmp <- validData(rma.ufr, which="UnitName")
+tmp <- cbind(tmp, msk)
+@
+
+However, the recommended way to extract all data together with the filter mask as well
+as the gene annotation is:
+<<>>=
+tmp <- export.filter(rma.ufr, treetype="stt",
+                     varlist="fUnitName:fName:fSymbol:fc:pval:flag",
+                     as.dataframe=TRUE, verbose=FALSE)
+head(tmp)
+@
+
+Now all 181 pre--selected genes are extracted as \Robject{data.frame} together with 
+the corresponding annotation and the filter mask. \\
+
+
+\pagebreak
+It is also possible to create a fold-change vs p-value plot, called \Rcode{volcanoplot}.
+Setting the parameter \Rcode{labels="fSymbol"} allows us to draw the corresponding gene 
+symbols, if known:
+
+\begin{center}
+<<volcanoplot, fig=TRUE>>=
+volcanoplot(rma.ufr, labels="fSymbol")
+@
+\end{center}
+
+
+\pagebreak
+\appendix
+
+\section{Appendices}
+
+\subsection{Importing chip definition and annotation files}
+%\label{appA1}
+
+In contrast to other packages, which rely on the Bioconductor method for creating
+cdf environments, we need to create \ROOT\ \Rclass{scheme} files directly from the
+Affymetrix source files, which need to be downloaded first from the Affymetrix web
+site. However, once created, it is in principle possible to distribute the \ROOT\ 
+\Rclass{scheme} files, too.
+
+Here we will demonstrate, how to create a \ROOT\ \Rclass{scheme} file for Affymetrix
+GeneChip {\it Test3.CDF}. We assume that the following files were downloaded, unzipped, 
+and saved in subdirectories \Rcode{libraryfiles} and \Rcode{Annotation}, respectively:
+
+\begin{itemize}
+\item GeneChip chip definition file: {\it Test3.CDF}
+\item Probe sequence file: {\it Test3\_probe.tab}
+\item Probeset annotation file: {\it Test3.na32.annot.csv}
+\end{itemize}
+
+In a new \Robject{R}-session we load our library and define the directories, where
+the library files and the annotation files are saved, respectively, and the directory,
+where the \ROOT\ \Rclass{scheme} files should be saved:
+<<eval=FALSE>>=
+library(xps)
+libdir <- "/path/to/Affy/libraryfiles"
+anndir <- "/path/to/Affy/Annotation"
+scmdir <- "/path/to/CRAN/Workspaces/Schemes"
+@
+
+Now we can create a \ROOT\ \Rclass{scheme} file:
+<<eval=FALSE>>=
+scheme.test3 <- import.expr.scheme("SchemeTest3",
+                     filedir    = scmdir,
+                     schemefile = file.path(libdir, "Test3.CDF"), 
+                     probefile  = file.path(libdir, "Test3_probe.tab"), 
+                     annotfile  = file.path(anndir, "Test3.na32.annot.csv"))
+@
+
+The \Robject{R} object \Rclass{scheme.test3} is not needed lateron, since in every
+new \Robject{R}-session the \ROOT\ \Rclass{scheme} file need to be imported first, using:
+
+<<eval=FALSE>>=
+scmdir <- "/path/to/CRAN/Workspaces/Schemes"
+scheme.test3 <- root.scheme(file.path(scmdir,"SchemeTest3.root"))
+@
+
+Package \xps\ includes a file "script4schemes.R" which contains code to import some of the 
+main CDF and annotation files, which can be copied to an \Robject{R}-session, including
+code to create \ROOT\ \Rclass{scheme} files for the currently available Exon arrays (Exon 1.x ST) 
+and Whole Genome arrays (Gene 1.x ST).
+
+{\bf Note 1:} Since \ROOT\ \Rclass{scheme} files need to be created only once, it is 
+recommended to save them in a common system directory, e.g. 'Schemes', which is accessible 
+to other users, too.
+
+{\bf Note 2:} As mentioned earlier, slot \Rcode{mask} of \Rclass{scheme.test3} needs to
+be attached to instances of S4 class \Rclass{DataTreeSet} before accessing raw data,
+since  slot \Rcode{mask} contains the information which oligos on the array are PM, MM,
+or control oligos, respectivly. If you want to avoid this step you can create instances
+of \Rclass{SchemeTreeSet}, which contain this information already, by setting parameter
+\Rcode{add.mask} of function \Rfunction{import.expr.scheme} to \Rcode{add.mask=TRUE}, 
+e.g.:
+<<eval=FALSE>>=
+scheme.test3 <- import.expr.scheme("SchemeTest3",..., add.mask=TRUE)
+@
+
+{\bf Note 3:} Please note that for the new GeneChip Exon array systems and Whole Genome array 
+systems Affymetrix no longer supports CDF-files, but uses the new CLF-files and PGF-files instead.
+For this reason package \xps\ also uses CLF-, PGF-files to create the root scheme files, and
+does not use the inofficial CDF-files. See the help files \Rfunction{?import.exon.scheme}
+and \Rfunction{?import.genome.scheme} for more information.
+
+
+\subsection{Additional examples}
+%\label{appA2}
+
+Additional examples how to use package \xps\ can be found in file "script4xps.R", located
+in subdirectory 'xps/examples'. Most of these examples are easily adaptable to users need and can 
+be copied with no or only minor modifications. Furthermore, a second file, "script4exon.R", 
+shows how to use \xps\ with the novel Affymetrix Whole Genome and Exon arrays. Both files use 
+the Affymetrix "Human Tissue Datasets" for arrays HG-U133\_Plus\_2, HuEx-1\_0-st-v2 and 
+HuGene-1\_0-st-v1, respectively.
+
+
+\subsection{Using Biobase class ExpressionSet}
+
+Some users may prefer to use S4 class \Rclass{ExpressionSet}, defined in the \Rpackage{Biobase} 
+package of Bioconductor, for further analysis of expression measures. 
+
+Package \Rpackage{Biobase} contains a vignette "ExpressionSetIntroduction.pdf", which
+describes how to build an \Rclass{ExpressionSet} from scratch. Here we create a minimal
+\Rclass{ExpressionSet} containing the expression measures determined using RMA:
+
+First, we need to load library \Rpackage{Biobase}, then extract the expression levels
+from instance \Robject{data.rma} of class \Rclass{ExprTreeSet}, convert the data.frame
+to a matrix, and finally create an instance of class \Rclass{ExpressionSet}:
+
+<<eval=FALSE>>=
+library(Biobase)
+expr.rma <- validData(data.rma)
+minimalSet <- new("ExpressionSet", exprs = as.matrix(expr.rma))
+@
+
+As described in vignette "ExpressionSetIntroduction.pdf", we can now access the data 
+elements. For this example we create a new \Rclass{ExpressionSet} consisting of the 5 
+features and the first 3 samples:
+
+<<eval=FALSE>>=
+vv <- minimalSet[1:5,1:3]
+featureNames(vv)
+sampleNames(vv)
+exprs(vv)
+@
+
+This class \Rclass{ExpressionSet} can now be used from within other Bioconductor packages.
+
+
+\subsection{ROOT graphics}
+
+As noted earlier, package \xps\ allows to analyze Exon arrays on computers with only 1GB RAM. 
+However, in some cases it may not possible to use R-based plots. For this purpose \xps\ takes 
+advantage of the \ROOT\ graphics capabilities, which do not suffer from such memory limitations. 
+
+In the following we will demonstrate some of the \ROOT\ graphics capabilities using the 33 exon 
+array data of all 11 tissues from the Affymetrix Exon Array Data Set "Tissue Mixture" (see 
+file "script4exon.R"). \\
+
+Let us first create an image using function \Rfunction{root.image}:
+
+<<eval=FALSE>>=
+root.image(data.exon, treename="BreastA.cel", zlim=c(3,11), w=400, h=400)
+@
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=70mm]{Image.png}
+  \includegraphics[width=70mm]{ImageZoom.png}
+%  \caption{xxx}
+%  \label{xxx}
+\end{center}
+\end{figure}
+
+\pagebreak
+
+The left side of the figure shows the image created, while the right side shows the figure after 
+zooming-in (see \Rcode{?root.image} how to save the image and how to zoom-in). \\
+
+Now let us create density-plots for the raw intensities of all 33 exon arrays, as well as for the 
+RMA-normalized expression levels:
+
+<<eval=FALSE>>=
+root.density(data.exon, "*", w=400, h=400)
+root.density(data.x.rma, "*", w=400, h=400)
+@
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=70mm]{DensityPlot.png}
+  \includegraphics[width=70mm]{DensityPlotRMA.png}
+%  \caption{xxx}
+%  \label{xxx}
+\end{center}
+\end{figure}
+
+In addition we create profile plots for the RMA-normalized expression levels:
+
+<<eval=FALSE>>=
+root.profile(data.x.rma, w=640, h=400)
+@
+
+\pagebreak
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics{ProfileExonRMA.png}
+%  \includegraphics[width=70mm]{ProfileExonRMA.png}
+%  \caption{xxx}
+%  \label{xxx}
+\end{center}
+\end{figure}
+
+As you see, the profile plots shows both a histogram and a boxplot for each sample. \\
+
+It is also possible to draw scatter-plots for the raw intensities between any two arrays, as well 
+as between two RMA-normalized expression levels:
+
+<<eval=FALSE>>=
+root.graph2D(data.exon, "BreastA.cel", "BreastB.cel")
+root.graph2D(data.x.rma, "BreastA.mdp", "BreastB.mdp")
+@
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=70mm]{Graph2D.png}
+  \includegraphics[width=70mm]{Graph2DRMA.png}
+%  \caption{xxx}
+%  \label{xxx}
+\end{center}
+\end{figure}
+
+The left scatter-plot compares the raw intensities of two breast tissue replicas for all 
+probes on the exon array, while the right scatter-plot compares the respective normalized 
+expression levels. \\
+
+\pagebreak
+
+Besides using scatter-plots it is also possible to plot the same data as 2D-histograms:
+
+<<eval=FALSE>>=
+root.hist2D(data.exon, "BreastA.cel", "BreastB.cel", option="COLZ")
+root.hist2D(data.x.rma, "BreastA.mdp", "BreastB.mdp", option="COLZ")
+root.hist2D(data.x.rma, "BreastA.mdp", "BreastB.mdp", option="SURF2")
+@
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=70mm]{Histogram2DRMA.png}
+  \includegraphics[width=70mm]{Histogram2DRMAsurf2.png}
+%  \caption{xxx}
+%  \label{xxx}
+\end{center}
+\end{figure}
+
+Here we show two different ways to plot the 2D-histogram for the normalized expression levels 
+by simply changing the parameter \Rcode{option}. The left histogram uses the default 
+\Rcode{option="COLZ"} while the right histogram was created using \Rcode{option="SURF2"} to 
+allow a 3-dimensional view of the expression level distribution. \\
+
+Finally, it is also possible to create 3D-histograms:
+
+<<eval=FALSE>>=
+root.hist3D(data.exon, "BreastA.cel", "BreastB.cel", "BreastC.cel", option="SCAT")
+root.hist3D(data.x.rma, "BreastA.mdp", "BreastB.mdp", "BreastC.mdp", option="SCAT")
+@
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[width=70mm]{Histogram3D.png}
+  \includegraphics[width=70mm]{Histogram3DRMA.png}
+%  \caption{xxx}
+%  \label{xxx}
+\end{center}
+\end{figure}
+
+\pagebreak
+
+The left 3D-histogram compares the raw intensities of the breast tissue triplicates for all 
+probes on the exon array, while the right scatter-plot compares the respective normalized 
+expression levels. 
+
+Since quite often samples are hybridized onto arrays as triplicates, 3D-histograms are helpful 
+in getting a first impression on the quality of the triplicates.
+
+{\bf Note:} The 3D-histograms can be rotated interactively, see \Rcode{?root.hist3D}.
+
+
+\subsection{Using methods FARMS and DFW}
+
+Analogously to method \Rcode{medianpolish}, used for \Rcode{rma}, both \Rcode{farms} and
+\Rcode{dfw} are multichip summarization methods. The algorithm for FARMS (Factor Analysis 
+for Robust Microarray Summarization) is described in \citep{hochr:etal:2006} and is available 
+as package \Rpackage{farms}. The algorithm for DFW (Distribution Free Weighted Fold Change) 
+is described in \citep{chen:etal:2007} and the R implementation can be downloaded from the 
+web site of M.McGee. Both authors claim that their respective methods outperform method 
+\Rcode{rma} (see also Affycomp II: A benchmark for Affymetrix GeneChip expression measures). \\
+
+The \Robject{R} implementation of both methods requires package \Rpackage{affy} since both 
+methods must be registered with \Rpackage{affy}. In contrast, package \Rpackage{xps} implements 
+both summarization methods in C++ and thus does not require any additional package.
+
+In general, summarization methods are implemented in package \Rpackage{xps} as C++ classes 
+derived from base class \Rmethod{XExpressor}. Thus summarization method \Rcode{medianpolish} 
+is implemented as class \Rmethod{XMedianPolish}, while methods \Rcode{farms} and \Rcode{dfw} 
+are implemented as classes \Rmethod{XFARMS} and \Rmethod{XDFW}, respectively. \\
+
+To use FARMS you simply do:
+
+<<eval=FALSE>>=
+data.farms <- farms(data.test3,"tmp_Test3FARMS",verbose=FALSE)
+@
+
+To use DFW you simply do:
+
+<<eval=FALSE>>=
+data.dfw <- dfw(data.test3,"tmp_Test3DFW",verbose=FALSE)
+@
+
+Since the authors of both algorithms recommend to use their summarization methods with quantile 
+normalization but without background correction, methods \Rcode{farms} and \Rcode{dfw} follow 
+these suggestions.  Users wanting to use both methods with a background correction method need 
+to use the general method \Rcode{express} (see \Rcode{?express}). \\
+
+In addition to FARMS as summarization method the authors have also implemented a novel filtering 
+method, called I/NI-calls, to exlcude non-informative genes, see \citep{tallo:etal:2007}. This
+method cannot only be used with FARMS but also together with other methods to compute expression 
+measures such as RMA. \\
+
+To use I/NI-calls you simply do:
+
+<<eval=FALSE>>=
+call.ini <- ini.call(data.test3,"tmp_Test3INI",verbose=FALSE)
+@
+
+{\bf Note:} Although package \Rpackage{farms} is available under the GNU General Public License,
+the authors state on their web site that: "This package (i.e. \Rpackage{farms\_1.x}) is only free 
+for non-commercial users. Non-academic users must have a valid license." Since I do not know 
+if this statement applies for my C++ implementation, too, it is recommended that respective 
+users contact the authors of the original package. 
+
+
+\bibliographystyle{plainnat}
+\bibliography{xps}
+
+\end{document}

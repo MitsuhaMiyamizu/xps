@@ -1,0 +1,49 @@
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+First, I want to thank Rene Brun for his continuous help ever since I have
+started to use ROOT in summer 1999, including checking my paper and demo source
+code that I have presented at the DSC 2003 in Vienna.
+
+I want also to thank all other ROOT developers who answered all my questions
+during all these years, especially Fons Rademakers, Christian Holm Christensen,
+Philippe Canal, Valeri Fine, Valeriy Onuchin, Damir Buskulic, Eddy Offermann,
+Brett Viren, Masaharu Goto, Olivier Couet, Remi Mommsen, Anna Kreshuk, Ilka
+Antcheva, Axel Naumann, Bertrand Bellenot. I am sure I forgot many others.
+
+I am also greatful to Christian Haslinger who suggested in the winter 2006
+to convert XPS into a Bioconductor package. Ever since then I am wondering why
+I have never considered this obvious step myself before.
+
+During my recent efforts to wrap my C++ library into an R package, I experienced
+the continuous help from many R developers. I am especially greatful to Paul
+Roebuck for his great example how to call C++ from R, for Benilton Carvalho, 
+Seth Falcon, Martin Morgan and especially Herve Pages for their great help to 
+understand S4 classes, and Simon Urbanek for his help regarding diverse Intel-Mac 
+related problems. Last but not least I want to thank Robert Gentleman for 
+reviewing my package and for making helpful suggestions.
+
+Furthermore I want to thank Prof. Brian Ripley (R Core Development), Patrick 
+Aboyoun (Bioconductor), Philippe Canal, and especially Bertrand Bellenot for 
+their help when porting my package to Windows XP.
+
+I am also greatful to Djork Clevert who provided me the latest implementation 
+of the farms package (farms_1.3.1) prior to publication.
+
+Last but not least I want to thank the numerous users for reporting problems,
+which helps me to improve the quality and stability of my package.
+Especially, I want to thank Annamaria Carissimo for reporting a mas5 problem
+with exon arrays, and for continuously testing new updates until I could finally 
+solve this problem. Furthermore, I want to thank Simon de Bernard for testing
+xps extensively, reporting bugs and even offering solutions, especially an 
+essential improvement in class XQuantileNormalizer. 
+
+Jan. 2013:
+Although xps, compiled with MS VC++, does work on Windows XP it did not work on 
+Vista and Windows 7. For this reason I am very grateful to Alexey Lebedev who 
+has adapted the ROOT source package for compilation with MinGW and succceded in 
+creating a ROOT binary which finally allows xps to work on Vista and Windows 7,
+too. 
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+

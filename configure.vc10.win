@@ -1,0 +1,67 @@
+# check if ROOT is installed in fixed location:
+echo "testing for presence of ROOT..."
+
+ROOTEXE=`perl 'findroot.pl'`
+if [ "${ROOTEXE}" = "ERR_ROOTSYS" ]; then
+   echo ""
+   echo "${R_PACKAGE_NAME} configuration error:"
+   echo ""
+   echo "   The environment variable ROOTSYS was not found."
+   echo "   Please set ROOTSYS to the directory where ROOT is located."
+   echo ""
+   echo "   Please consult the README file for more information."
+   echo ""
+   exit 1
+elif [ "${ROOTEXE}" = "ERR_ROOTEXE" ]; then
+   echo ""
+   echo "${R_PACKAGE_NAME} configuration error:"
+   echo ""
+   echo "   The ROOT binary root.exe was not found in directory ${ROOTSYS}/bin."
+   echo "   Please install ROOT for Windows and/or check ROOTSYS."
+   echo ""
+   echo "   Please consult the README file for more information"
+   echo ""
+   exit 1
+else
+   echo "   found ${ROOTEXE} of ROOT in directory ${ROOTSYS}/bin...OK"
+#   echo "   found ROOT version `root-config --version` in directory `root-config --prefix`"
+fi
+
+# check if MSVC++ is installed:
+echo "testing for presence of MSVC++..."
+VCCLEXE=`perl 'findvc.pl'`
+if [ "${VCCLEXE}" = "ERR_CLEXE" ]; then
+   echo ""
+   echo "${R_PACKAGE_NAME} configuration error:"
+   echo ""
+   echo "   The VC++ compiler cl.exe was not found."
+   echo "   Please install Microsoft Visual C++ or check the settings."
+   echo "   Please define path variables for Microsoft Visual Studio"
+   echo "   in environment variable MSVSPATH."
+   echo ""
+   echo "   Please consult the README file for more information"
+   echo ""
+   exit 1
+elif [ "${VCCLEXE}" = "ERR_VCVARSALLEXE" ]; then
+   echo ""
+   echo "${R_PACKAGE_NAME} configuration error:"
+   echo ""
+   echo "   The file vcvarsall.bat of Visual C++ was not found."
+   echo "   Please install Microsoft Visual C++ or check the settings."
+   echo ""
+   echo "   Please consult the README file for more information"
+   echo ""
+   exit 1
+else
+   echo "   found Visual C++ compiler in directory ${VCCLEXE}/bin...OK"
+fi
+
+# set path for MS Visual Studio
+PATH="${MSVSPATH}":"${PATH}"
+#PATH="${VCCLEXE}"\\bin:"${PATH}"
+
+# set environment variables for VC++ (does not work)
+#echo "\"${VCCLEXE}\\vcvarsall.bat\""
+#exec "${VCCLEXE}\\vcvarsall.bat"
+
+exit 0

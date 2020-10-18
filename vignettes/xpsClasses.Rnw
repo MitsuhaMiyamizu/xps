@@ -1,0 +1,604 @@
+%\VignetteIndexEntry{2. XPS Vignette: Classes}
+%\VignetteDepends{xps}
+%\VignetteKeywords{Expression, Affymetrix, Oligonucleotide Arrays}
+%\VignettePackage{xps}
+\documentclass{article}
+
+\usepackage{hyperref}
+\usepackage[authoryear,round]{natbib}
+
+\textwidth=6.2in
+\textheight=8.5in
+%\parskip=.3cm
+\oddsidemargin=.1in
+\evensidemargin=.1in
+\headheight=-.3in
+
+\newcommand{\Rfunction}[1]{{\texttt{#1}}}
+\newcommand{\Rmethod}[1]{{\texttt{#1}}}
+\newcommand{\Rcode}[1]{{\texttt{#1}}}
+\newcommand{\Robject}[1]{{\texttt{#1}}}
+\newcommand{\Rpackage}[1]{{\textsf{#1}}}
+\newcommand{\Rclass}[1]{{\textit{#1}}}
+\newcommand{\Cclass}[1]{{\textit{#1}}}
+\newcommand{\Rexten}[1]{{\textit{#1}}}
+\newcommand{\xps}{\Rpackage{xps}}
+\newcommand{\ROOT}{\Robject{ROOT}}
+
+\begin{document}
+
+\bibliographystyle{plainnat}
+
+\title{Introduction to the xps Package: Classes structure}
+\date{September, 2011}
+\author{Christian Stratowa}
+\maketitle
+
+\tableofcontents
+
+\section{Introduction}
+
+ This document provides a tutorial on the class structures used in the \xps\ package. 
+ The \xps\ package provides S4 class definitions and associated methods for raw
+ intensity data, preprocessed intensity data, expression measures, and detection call data
+ for batches of Affymetrix expression or exon arrays. Detailed information on functions,
+ classes and methods can be obtained in the help files.
+
+ Since the main purpose of the S4 classes is to provide a link to and allow access to
+ \ROOT\ files and the \ROOT\ trees contained therein, it is important to understand the
+ meaning of \ROOT\ files and the \ROOT\ trees first.
+
+
+\section{XPS and ROOT}
+
+ Package \xps\ is based on two powerful frameworks, namely \Robject{R} and \ROOT. 
+ \ROOT (\url{http://root.cern.ch}) is an object-oriented C++ framework that has been 
+ developed at CERN for distributed data warehousing and data mining of particle 
+ data in the petabyte range. Data are stored as sets of objects in machine-independent 
+ files, and a specialized class, called a \ROOT\ tree, has been designed to store large
+ quantities of data, see The ROOT \cite{root:2009}. 
+
+
+\subsection{ROOT File}
+
+ A ROOT file, C++ class \Cclass{TFile}, is like a UNIX file directory. It can contain
+ directories and objects organized in unlimited number of levels. It is also stored in
+ machine independent format. Thus it can be considered to be the \ROOT\ equivalent of an 
+ \Robject{R} \Robject{environment}. Just like an \Robject{R} \Robject{environment}
+ a \ROOT\ file can be copied to any system directory and used from within any OS.
+
+ A \ROOT\ file can store any C++ object like \ROOT\ trees, but also any other object such
+ as a text file. For our purpose it is only important to know that \ROOT\ trees can be
+ stored in \ROOT\ files.
+
+
+\subsection{ROOT Tree}
+
+ \ROOT\ trees, C++ class \Cclass{TTree}, have been especially designed to store large 
+ quantities of same-class objects. As simplest case, a \ROOT\ tree can store data imported
+ from tables, and thus can be considered to be the \ROOT\ equivalent of an \Robject{R}
+ \Robject{data.frame}. A \ROOT\ tree consists of branches and leaves, with each leaf
+ containing the data from one column of the imported data table.
+
+ The \Cclass{TTree} class is optimized to reduce disk space and enhance access speed. When
+ using a TTree, you fill its branch buffers with leaf data and the buffers are written to
+ disk when it is full. Branches, buffers, and leaves are explained in: The ROOT \cite{root:2009};
+ here it is important to realize that each object is not written individually, but rather
+ collected and written a bunch at a time. This is where \Cclass{TTree} takes advantage of
+ compression and will produce a much smaller file than if the objects were written individually.
+
+
+\section{XPS S4 classes}
+
+ Taking advantage of the features described above, package \xps\ stores all data as \ROOT\
+ trees in portable \ROOT\ files. The four main classes for Affymetrix oligonucleotide
+ array data are:
+
+\begin{description}
+\item
+{{\tt SchemeTreeSet}:} Data describing microarray layout, probe information and metadata
+ for genes are stored as \ROOT\ trees in \ROOT\ \Rclass{scheme} files, accessible
+ from \Robject{R} as S4 class \Rclass{SchemeTreeSet} objects. 
+
+\item
+{{\tt DataTreeSet}:} This class provides the link to \ROOT\ data files and the \ROOT\
+ trees contained therein. Data files contain the content of the raw CEL-files as
+ \ROOT\ trees. Additional data files can contain the background-corrected intensities
+ as well as the computed background intensities.
+
+\item
+{{\tt ExprTreeSet}:} Preprocessing of raw data, i.e. summarization and normalization, results
+ in conversion of probe level data to expression values. These data are stored as \ROOT\ 
+ trees in \ROOT\ expression files. Class \Rclass{ExprTreeSet} provides the link to the \ROOT\
+ expression file and the \ROOT\ trees contained therein. 
+
+\item
+{{\tt CallTreeSet}:} Results of MAS5 detection calls or DABG calls, respectively, and the
+ corresponding p-values are stored as \ROOT\ trees in \ROOT\ call files, accessible via
+ class \Rclass{CallTreeSet}.
+\end{description}
+
+In addition, an extra S4 class exists for quality control: 
+
+\begin{description}
+\item
+{{\tt QualTreeSet}:} This class provides the link to the \ROOT\ quality control file and the 
+\ROOT\ trees contained therein. 
+\end{description}
+
+
+ All of these S4 classes are derived from the same virtual base class \Rclass{TreeSet}. \\
+
+
+ The following classes are relevant for filtering and analysis of expression values:
+
+\begin{description}
+\item
+{{\tt PreFilter}:} This class allows the initialization of different non--specific filters
+ and stores the relevant parameters of each filter. 
+
+\item
+{{\tt UniFilter}:} This class allows the initialization of different univariate filters
+ and stores the relevant parameters of each filter.. 
+
+\item
+{{\tt FilterTreeSet}:} This class provides a link between class \Rclass{ExprTreeSet}, the
+ filter class applied to this \Rclass{ExprTreeSet} and the resulting \ROOT\ filter file and 
+ the \ROOT\ mask tree contained therein. 
+
+\item
+{{\tt AnalysisTreeSet}:} Univariate analysis allows the selection of differentially
+ expressed genes. This class provides a link between class \Rclass{FilterTreeSet}
+ containing the relevant filtering information, and the resulting \ROOT\ filter file and 
+ the \ROOT\ trees contained therein.
+\end{description}
+
+ The S4 classes \Rclass{PreFilter} and \Rclass{UniFilter} are derived from base class 
+ \Rclass{Filter} while S4 classes \Rclass{FilterTreeSet} and \Rclass{AnalysisTreeSet} 
+ are derived from the virtual base class \Rclass{TreeSet}. \\
+
+
+ An optional S4 class, called \Rclass{ProjectInfo}, can be used to describe the relevant
+ phenotypic and MIAME-like project information.
+
+
+\subsection{{\tt TreeSet} class} 
+
+ This is the virtual base class for all other S4 classes and provides the link to the
+ \ROOT\ file and the \ROOT\ trees contained therein for the corresponding subclass.
+
+ Function \Rfunction{getClassDef} can be used to get information on the slots and the
+ inheritance information:
+
+<<results=hide>>=
+library(xps)
+@
+
+<<R>>=
+getClassDef("TreeSet")
+@
+
+ The meaning of the slots is as follows:
+\begin{description}
+  \item{{\tt setname}:}{ Object of class "character", representing the name to the \ROOT\
+   file subdirectory where the \ROOT\ trees are stored, usually one of \Cclass{DataTreeSet},
+   \Cclass{PreprocesSet}, \Cclass{CallTreeSet}.}
+  \item{{\tt settype}:}{ Object of class "character", describing the type of treeset
+   stored in \Robject{setname}, usually one of \Robject{scheme}, \Robject{rawdata},
+   \Robject{preprocess}.}
+  \item{{\tt rootfile}:}{ Object of class "character", representing the name of the
+   \ROOT\ file, including the full path.} 
+  \item{{\tt filedir}:}{ Object of class "character", describing the full path to the
+   system directory where \Robject{rootfile} is stored.}
+  \item{{\tt numtrees}:}{ Object of class "numeric", representing the number of \ROOT\ 
+   trees stored in subdirectoy \Robject{setname}.} 
+  \item{{\tt treenames}:}{ Object of class "list", representing the names of the \ROOT\ 
+   trees stored in subdirectoy \Robject{setname}.}
+\end{description}
+
+
+\subsection{{\tt SchemeTreeSet} class} 
+
+ This class extends class \Rclass{TreeSet} and allows access to the \ROOT\ scheme trees,
+ probe trees and annotation trees. Furthermore, it contains certain array information 
+ (slot \Robject{probeinfo}) and allows access to the array mask (slot \Robject{mask}),
+ describing the probe type. 
+
+<<R>>=
+getClassDef("SchemeTreeSet")
+@
+
+ In addition to the slots of \Rclass{TreeSet} it contains the following slots:
+\begin{description}
+  \item{{\tt chipname}:}{ Object of class "character", representing the Affymetrix
+   chip name.}
+  \item{{\tt chiptype}:}{ Object of class "character", representing the chip tpye, 
+   either "GeneChip" or "ExonChip".}
+  \item{{\tt probeinfo}:}{ Object of class "list", representing chip information, 
+   including nrows, ncols, number of probes, etc.}
+  \item{{\tt mask}:}{ Object of class "data.frame". The data.frame can contain the mask 
+   used to identify the probes as e.g. PM, MM, or control probes.}
+\end{description}
+
+ As an example, \Robject{scheme.test3}, described in Vignette "xps.pdf" contains the
+ information for the Affymetrix  `Test3' expression array:
+
+<<>>=
+scheme.test3 <- root.scheme(paste(path.package("xps"),"schemes/SchemeTest3.root",sep="/"))
+str(scheme.test3)
+@ 
+
+ As this example demonstrates, the \ROOT\ scheme file contains 4 \ROOT\ trees, storing
+ all necessary GeneChip information, including the annotation. All trees can be exported
+ as tables, and optionally also imported as \Robject{data.frame}.
+
+ The `Unit' tree with extension \Rexten{idx} contains information about the processing
+ units, i.e. the Affymetrix probesets, such as an internal `UNIT\_ID', probeset names and
+ number of cells:
+
+<<>>=
+idx <- export(scheme.test3, treetype="idx", outfile="Test3_idx.txt", as.dataframe=TRUE, verbose=FALSE)
+idx[10:16,]
+@ 
+
+ The `Scheme' tree with extension \Rexten{scm} provides the chip layout for the different
+ probesets, i.e. the (x,y)-coordinates for each probeset with a defined `UNIT\_ID':
+
+<<>>=
+scm <- export(scheme.test3, treetype="scm", outfile="Test3_scm.txt", as.dataframe=TRUE, verbose=FALSE)
+scm[1843:1848,]
+@ 
+
+ As shown, this tree contains also a column (leaf) `Mask', which assigns the probe type
+ to each probe on the array. For expression arrays, probe types are PM with \Rcode{msk=1},
+ MM with \Rcode{msk=0}, and control probes with \Rcode{msk=-1}. `Mask' for exon arrays
+ will be described elsewhere.
+
+ As default, slot \Rcode{mask} is empty to save memory (especially when using exon arrays).
+ It is easy to add the `Mask' to slot \Rcode{mask} (and remove it, too):
+
+<<>>=
+scheme.test3 <- attachMask(scheme.test3)
+msk <- chipMask(scheme.test3)
+scheme.test3 <- removeMask(scheme.test3)
+msk[1843:1848,]
+@
+
+ The `Probe' tree with extension \Rexten{prb} contains the nucleotide sequence for each
+ PM oligonucleotide, as well as the GC-content and the calculated melting temperature Tm:
+
+<<>>=
+prb <- export(scheme.test3, treetype="prb", outfile="Test3_prb.txt",as.dataframe=TRUE, verbose=FALSE)
+prb[1843:1848,]
+@ 
+
+ Finally, the transcript `Annotation' tree with extension \Rexten{ann} contains the
+ probeset annotation, such as gene name and symbol:
+
+<<>>=
+ann <- export(scheme.test3, treetype="ann", outfile="Test3_ann.txt",as.dataframe=TRUE, verbose=FALSE)
+head(ann)
+@ 
+
+ The \ROOT\ \Rclass{scheme} files for exon arrays contain additional tree types, see 
+ the help file \Rcode{?validTreeType}.
+
+
+\subsection{{\tt ProcesSet} class} 
+
+ This is the common base class for subclasses \Rclass{DataTreeSet}, \Rclass{ExprTreeSet}, 
+ \Rclass{CallTreeSet} and \Rclass{QualTreeSet}, respectively, and contains the following slots:
+
+<<R>>=
+getClassDef("ProcesSet")
+@
+
+ The additional slots are:
+\begin{description}
+  \item{{\tt scheme}:}{ Object of class "SchemeTreeSet", providing access to the \ROOT\
+   scheme file.}
+  \item{{\tt data}:}{ Object of class "data.frame". The data.frame can contain 
+   the data stored in \ROOT\ data trees.}
+  \item{{\tt params}:}{ Object of class "list" representing relevant parameters.}
+\end{description}
+
+ The content of slot \Rcode{data} depends on the type of subclass:
+
+ For subclass \Rclass{DataTreeSet} slot \Rcode{data} is reserved for the probe data,
+ however, it is empty by default to avoid potential memory problems with large
+ datasets. For subclasses \Rclass{ExprTreeSet} and \Rclass{CallTreeSet} slot \Rcode{data}
+ contains expression levels and detection p-values, respectively. 
+
+
+\subsection{{\tt DataTreeSet} class}
+ 
+ Class \Rclass{DataTreeSet} is usually created when importing raw CEL-files as \ROOT\
+ trees into a \ROOT\ data file, or accessing an existing \ROOT\ data file, using
+ functions \Rcode{import.data} or \Rcode{root.data}, respectively. However, certain
+ preprocessing functions such as \Rcode{bgcorrect} can also result in the creation
+ of class \Rclass{DataTreeSet}. The slots are:
+
+<<R>>=
+getClassDef("DataTreeSet")
+@
+
+ Following additional slots are defined for class \Rclass{DataTreeSet}:
+\begin{description}
+  \item{{\tt bgtreenames}:}{ Object of class "list", representing the names of  
+   optional \ROOT\ background trees.}
+  \item{{\tt bgrd}:}{ Object of class "data.frame". The data.frame can contain 
+   background intensities stored in \ROOT\ background trees.}
+  \item{{\tt projectinfo}:}{ Object of class "ProjectInfo", containing information 
+   about the project.}
+\end{description}
+
+ Slots \Rcode{bgtreenames} and \Rcode{bgrd} are reserved for optional background
+ tree names and data, respectively.
+
+ Slot \Rcode{projectinfo} allows to save optional project information defined in
+ class \Rclass{ProjectInfo} described below. The project information will not only
+ be stored in class \Rclass{DataTreeSet}, but also in the \ROOT\ data file containing
+ the raw data from the CEL-files, when using functions \Rcode{import.data} or
+ \Rcode{addData}, respectively. \\
+
+
+ As an example, \Robject{data.test3}, described in Vignette "xps.pdf" contains the
+ information to access the CEL-files from the `Test3' expression array, which are
+ stored as \ROOT\ trees in \ROOT\ data file \Rclass{DataTest3\_cel.root}:
+
+<<>>=
+data.test3 <- root.data(scheme.test3, paste(path.package("xps"),"rootdata/DataTest3_cel.root",sep="/"))
+str(data.test3)
+@ 
+
+ As mentioned, slot \Rcode{data} is initially empty to avoid memory problems with
+ large datasets, especially exon array datasets. Functions \Rcode{attachInten} and
+ \Rcode{removeInten} allow to attach/remove these data, respectively, as described
+ in Vignette "xps.pdf".
+
+
+\subsection{{\tt ExprTreeSet} class} 
+
+ Class \Rclass{ExprTreeSet} is obtained as result of preprocessing the raw data, i.e.
+ summarization, or as result of normalizing preprocessed data, respectively. It
+ contains the expression levels in slot \Rcode{data}. It has the following slots:
+
+<<R>>=
+getClassDef("ExprTreeSet")
+@
+
+ The additional slots are:
+\begin{description}
+  \item{{\tt exprtype}:}{ Object of class "character", representing the exression type, 
+   i.e. \Rcode{rma}, \Rcode{mas5}, \Rcode{mas4} or \Rcode{custom}.}
+  \item{{\tt normtype}:}{ Object of class "character", representing the normalization 
+   type, i.e. \Rcode{none}, \Rcode{mean}, \Rcode{median}, \Rcode{lowess},\Rcode{supsmu}.}
+\end{description}
+
+
+\subsection{{\tt CallTreeSet} class} 
+
+ Class \Rclass{CallTreeSet} allows to access the Affymetrix detection calls and corresponding
+ p-values, either the MAS5 detection calls or the detection above background (DABG) calls.
+ It is obtained as result of functions \Rcode{mas5.call} or  \Rcode{dabg.call}, respectively.
+ It has the following slots:
+
+<<R>>=
+getClassDef("CallTreeSet")
+@
+
+ The additional slots are:
+\begin{description}
+  \item{{\tt calltype}:}{ Object of class "character", representing the call type, 
+     i.e. "mas5" or "dabg".}
+  \item{{\tt detcall}:}{ Object of class "data.frame". The data.frame can contain 
+     the detection calls stored in \ROOT\ call trees.}
+\end{description}
+
+ Slot \Rcode{data} contains the detection call p-values while slot \Rcode{detcall}
+ contains the detection calls.
+
+
+\subsection{{\tt QualTreeSet} class} 
+
+ Class \Rclass{QualTreeSet} is obtained as result of fitting probe level models. 
+ It has the following slots:
+
+<<R>>=
+getClassDef("QualTreeSet")
+@
+
+ The additional slots are:
+\begin{description}
+  \item{{\tt qualtype}:}{ Object of class "character", representing the quality control 
+   option, i.e. 'raw', 'adjusted', 'normalized' or 'all'.}
+  \item{{\tt qualopt}:}{ Object of class "character", representing the quality control type, 
+   i.e. 'rlm' the normalization.}
+\end{description}
+
+
+\subsection{{\tt ProjectInfo} class} 
+
+ This class is a stand-alone supporting S4 class and allows to store phenotypic and
+ MIAME-like project information. It contains the following slots:
+
+<<R>>=
+getClassDef("ProjectInfo")
+@
+
+\begin{description}
+  \item{{\tt submitter}:}{ Object of class "character", representing the name of the
+   submitter.}
+  \item{{\tt laboratory}:}{ Object of class "character", representing the laboratory 
+   of the submitter.}
+  \item{{\tt contact}:}{ Object of class "character", representing the contact address
+   of the submitter.}
+  \item{{\tt project}:}{ Object of class "list", representing the project information.}
+  \item{{\tt author}:}{ Object of class "list", representing the author information.}
+  \item{{\tt dataset}:}{ Object of class "list", representing the dataset information.}
+  \item{{\tt source}:}{ Object of class "list", representing the sample source information.}
+  \item{{\tt sample}:}{ Object of class "list", representing the sample information.}
+  \item{{\tt celline}:}{ Object of class "list", representing the sample information for cell lines.}
+  \item{{\tt primarycell}:}{ Object of class "list", representing the sample information for primary cells.}
+  \item{{\tt tissue}:}{ Object of class "list", representing the sample information for tissues.}
+  \item{{\tt biopsy}:}{ Object of class "list", representing the sample information for biopsies.}
+  \item{{\tt arraytype}:}{ Object of class "list", representing the array information.}
+  \item{{\tt hybridizations}:}{ Object of class "data.frame", representing the hybridization information for each hybridization.}
+  \item{{\tt treatments}:}{ Object of class "data.frame", representing the treatment information for each hybridization.}
+\end{description}
+
+ This class must be created explicitely first using the constructor function \Rcode{ProjectInfo},
+ before it can be added to class \Rclass{DataTreeSet}. Here is a simple example for
+ \Robject{data.test3}:
+
+<<>>=
+project <- ProjectInfo(submitter="Christian", laboratory="home",contact="email")
+projectInfo(project)    <- c("TestProject","20060106","Project Type","use Test3 data for testing","my comment")
+authorInfo(project)     <- c("Stratowa","Christian","Project Leader","Company","Dept","cstrato.at.aon.at","++43-1-1234","my comment")
+datasetInfo(project)    <- c("Test3Set","MC","Tissue","Stratowa","20060106","description","my comment")
+sourceInfo(project)     <- c("Unknown","source type","Homo sapiens","caucasian","description","my comment")
+primcellInfo(project)   <- c("Mel31","primary cell",20071123,"extracted from patient","male","my pheno","my genotype","RNA extraction",TRUE,"NMRI","female",7.0,"months", "my comment")
+arrayInfo(project)      <- c("Test3","GeneChip","description","my comment")
+hybridizInfo(project)   <- c(c("TestA1","hyb type","TestA1.CEL",20071117,"my prep1","standard protocol","A1",1,"my comment"),
+                             c("TestA2","hyb type","TestA2.CEL",20071117,"my prep2","standard protocol","A2",1,"my comment"),
+                             c("TestB1","hyb type","TestB1.CEL",20071117,"my prep1","standard protocol","B1",2,"my comment"),
+                             c("TestB2","hyb type","TestB2.CEL",20071117,"my prep2","standard protocol","B2",2,"my comment"))
+treatmentInfo(project)  <- c(c("TestA1","DMSO",4.3,"mM",1.0,"hours","intravenous","my comment"),
+                             c("TestA2","DMSO",4.3,"mM",8.0,"hours","intravenous","my comment"),
+                             c("TestB1","DrugA2",4.3,"mM",1.0,"hours","intravenous","my comment"),
+                             c("TestB2","DrugA2",4.3,"mM",8.0,"hours","intravenous","my comment"))
+show(project)
+@ 
+
+
+\subsection{{\tt Filter} class} 
+
+ This is the base class for the S4 classes \Rclass{PreFilter} and \Rclass{UniFilter}.
+
+<<R>>=
+getClassDef("Filter")
+@
+
+ The meaning of the slots is as follows:
+\begin{description}
+  \item{{\tt numfilters}:}{ Object of class "numeric" giving the number of filters applied.}
+\end{description}
+
+
+\subsection{{\tt PreFilter} class} 
+
+ Class \Rclass{PreFilter} allows to apply different filters to class \Rcode{ExprTreeSet},
+ i.e. to the expression level data.frame \Rcode{data}..
+
+<<R>>=
+getClassDef("PreFilter")
+@
+
+ The meaning of the slots is as follows:
+\begin{description}
+  \item{{\tt mad}:}{Object of class "list" describing parameters for \Rcode{madFilter}.}
+  \item{{\tt cv}:}{Object of class "list" describing parameters for \Rcode{cvFilter}.}
+  \item{{\tt variance}:}{Object of class "list" describing parameters for \Rcode{varFilter}.}
+  \item{{\tt difference}:}{Object of class "list" describing parameters for \Rcode{diffFilter}.}
+  \item{{\tt ratio}:}{Object of class "list" describing parameters for \Rcode{RratioFilter}.}
+  \item{{\tt gap}:}{Object of class "list" describing parameters for \Rcode{RgapFilter}.}
+  \item{{\tt hithreshold}:}{Object of class "list" describing parameters for \Rcode{highFilter}.}
+  \item{{\tt lothreshold}:}{Object of class "list" describing parameters for \Rcode{lowFilter}.}
+  \item{{\tt quantile}:}{Object of class "list" describing parameters for \Rcode{quantileFilter}.}
+  \item{{\tt prescall}:}{Object of class "list" describing parameters for \Rcode{callFilter}.}
+\end{description}
+
+ This class must be created explicitely using the constructor function \Rcode{PreFilter},
+ and is added as parameter \Rcode{filter} to function \Rfunction{prefilter}. Here is an example,
+ where all filters are initialized for demonstration purposes only:
+
+<<>>=
+prefltr <- PreFilter()
+madFilter(prefltr) <- c(0.5,0.01)
+cvFilter(prefltr) <- c(0.3,0.0,0.01)
+varFilter(prefltr) <- c(0.6,0.02,0.01)
+diffFilter(prefltr) <- c(2.2,0.0,0.01)
+ratioFilter(prefltr) <- c(1.5)
+gapFilter(prefltr) <- c(0.3,0.05,0.0,0.01)
+lowFilter(prefltr) <- c(4.0,3,"samples")
+highFilter(prefltr) <- c(14.5,75.0,"percent")
+quantileFilter(prefltr) <- c(3.0, 0.05, 0.95)
+callFilter(prefltr) <- c(0.02,80.0,"percent")
+str(prefltr)
+@ 
+
+
+\subsection{{\tt UniFilter} class} 
+
+ Class \Rclass{UniFilter} allows to apply different unitest filters to class \Rcode{ExprTreeSet},
+ i.e. to the expression level data.frame \Rcode{data}.
+
+<<R>>=
+getClassDef("UniFilter")
+@
+
+ The meaning of the slots is as follows:
+\begin{description}
+  \item{{\tt foldchange}:}{Object of class "list" describing parameters for \Rcode{fcFilter}.}
+  \item{{\tt prescall}:}{Object of class "list" describing parameters for \Rcode{callFilter}.}
+  \item{{\tt unifilter}:}{Object of class "list" describing parameters for \Rcode{unitestFilter}.}
+  \item{{\tt unitest}:}{Object of class "list" describing parameters for \Rcode{uniTest}.}
+\end{description}
+
+ This class must be created explicitely using the constructor function \Rcode{UniFilter},
+ and is added as parameter \Rcode{filter} to function \Rfunction{unifilter}. Here is an example,
+ where all filters are initialized for demonstration purposes only:
+
+<<>>=
+unifltr <- UniFilter()
+fcFilter(unifltr) <- c(1.5,"both")
+callFilter(unifltr) <- c(0.02,80.0,"percent")
+unitestFilter(unifltr) <- c(0.01,"pval")
+uniTest(unifltr) <- c("t.test","two.sided","wy",5000,0.0,FALSE,0.98,TRUE)
+str(unifltr)
+@ 
+
+
+\subsection{{\tt FilterTreeSet} class} 
+
+ Class \Rclass{FilterTreeSet} is obtained as result of filtering an instance of class
+ \Rclass{ExprTreeSet}. It contains the filter mask in slot \Rcode{data}. 
+
+<<R>>=
+getClassDef("FilterTreeSet")
+@
+
+ In addition to the slots of classes \Rclass{ProcesSet} and \Rclass{TreeSet} it contains
+ the following slots:
+\begin{description}
+  \item{{\tt filter}:}{Object of class \Rcode{"Filter"} currently providing access to 
+     the \Rcode{PreFilter} settings.}
+  \item{{\tt exprset}:}{Object of class \Rcode{"ExprTreeSet"} providing direct access to 
+     the \Rcode{ExprTreeSet} used for filtering.}
+  \item{{\tt callset}:}{Object of class \Rcode{"CallTreeSet"} providing direct access to 
+     the optional \Rcode{CallTreeSet} used for filtering.}
+\end{description}
+
+
+\subsection{{\tt AnalysisTreeSet} class} 
+
+ Class \Rclass{AnalysisTreeSet} is obtained as result of filtering an instance of class
+ \Rclass{ExprTreeSet} using function \Rfunction{unifilter}. It contains currently the results
+ of the univariate analysis in slot \Rcode{data}. 
+
+<<R>>=
+getClassDef("AnalysisTreeSet")
+@
+
+ In addition to the slots of classes \Rclass{ProcesSet} and \Rclass{TreeSet} it contains
+ the following slots:
+\begin{description}
+  \item{{\tt fltrset}:}{Object of class \Rcode{"FilterTreeSet"} providing indirect access to 
+     the \Rcode{ExprTreeSet} used and the \Rcode{UniFilter} settings.}
+\end{description}
+
+
+\bibliography{xps}
+
+\end{document}
+

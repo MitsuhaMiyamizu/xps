@@ -1,0 +1,14 @@
+\section{Summary}
+
+ The current quality report for dataset '@DATASET@' displays the most important quality plots, using the
+ default settings for most plots. Package \xps\ contains additional plots which can be used for further
+ quality assessments. \\
+
+
+\section*{Session Information:}
+
+<<echo=FALSE>>=
+sessionInfo()
+@ 
+
+\end{document}

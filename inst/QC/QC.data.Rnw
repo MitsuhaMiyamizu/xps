@@ -1,0 +1,31 @@
+\section{Quality control for raw data}
+
+ The quality metrics in this section show the distribution of the raw feature intensities 
+ for each array. Figure \ref{DensityPlotData} shows density estimates for each array while 
+ Figure \ref{BoxplotData} shows the corresponding boxplots. 
+
+
+\pagebreak
+
+\begin{figure}[htpb]
+\begin{center}
+  \includegraphics{DensityPlotData.png}
+  \caption{Density plot of raw '@WHICH@' intensities for all samples.}
+  \label{DensityPlotData}
+\end{center}
+\end{figure}
+
+ Arrays with a significantly different shaped density may be considered to be suspect.
+
+
+\pagebreak
+
+\begin{figure}[htpb]
+\begin{center}
+  \includegraphics{BoxplotData.png}
+  \caption{Boxplot of raw intensities for all samples.}
+  \label{BoxplotData}
+\end{center}
+\end{figure}
+
+Arrays with a low average intensity may be considered to be suspect.

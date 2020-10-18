@@ -1,0 +1,592 @@
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+This INSTALL file was created on April 24 2017, just before the release
+of BioC 3.5. Although this INSTALL file still contains methods how to
+install ROOT and 'xps' during the 9 years that 'xps' exists on BioC,
+please note that with the current release of R, i.e. R-3.4.x and BioC 3.5,
+many things have changed. 
+
+IMPORTANT: Please note the following:
+
+1, ROOT:
+   ROOT version 5 is necessary for xps, since ROOT 6 has so many changes 
+   that it does not work with xps. However, ROOT 5 will in the future be 
+   no longer supported, thus the latest version 'root_v5.34.36' is also 
+   the last version of ROOT 5. 
+   The source code as well as binaries for Linux and Mac OS X can be obtained
+   from: https://root.cern.ch/content/release-53436
+
+2, Linux:
+   For certain Linux distributions there exist binaries at:
+   https://root.cern.ch/content/release-53436
+   Otherwise you need to compile ROOT from source as described below.
+   I hope that the description is still correct, if not please inform me.
+
+2, Macintosh:
+   I have developed 'xps' completely on Mac, so 'xps' did run on all Macs
+   from Tiger, Leopard, Snow Leopard, Lion, Mountain Lion, Mavericks, 
+   Yosemite, and now Sierra. I did not test El Capitan, but since it works 
+   on BioC 3.5 (with help of Herve Pages) it is also ok.
+   The current situation seems to be that the binary package R-3.4.0.pkg
+   requires El Capitan or Sierra. Mavericks and higher require R-3.3.3.pkg.
+   Snow Leopard, Lion, Mountain Lion require R-3.2.1-snowleopard.pkg.
+
+3, Windows:
+   Early versions of 'xps' were compiled with MS Visual C++ as long as 
+   CRAN did support Visual C++. Later CRAN created their own Rtools to
+   compile R, based probably on MinGW. 
+   Luckily, a user of 'xps' did create the binary 'root-mingw-O2.7z', so
+   that I could still support Windows. However, in autumn 2016, the new 
+   Windows toolchain for R-3.3.0 was based on a new version of the gcc
+   compiler, which is incompatible with 'root-mingw-O2.7z'. 
+   For this reason, starting with R-3.3.0, 'xps' is no longer available
+   on Windows.
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+Content:
+
+I.   Install ROOT:
+ Ia.  Install ROOT from source
+ Ib.  Install ROOT for Mac OS X
+ Ic.  Install ROOT for Mac OS X Mavericks and Yosemite
+ Id.  Install ROOT for Mac OS Sierra
+ Ie.  Install ROOT for Mac OS El Capitan
+ If.  Install ROOT for Windows XP, Vista, and Windows 7
+ Ig.  Notes on  ROOT
+II.  Install package 'xps':
+ IIa.  Install 'xps' from source
+ IIb.  Install 'xps' as binary
+ IIc.  Install 'xps' for Windows XP, Vista, and Windows 7
+ IId.  Tested architectures
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+I. Install ROOT:
+
+ Ia.  Install ROOT from source:
+ ------------------------------
+
+   Installation from source is explained extensively on the ROOT website, see:
+   http://root.cern.ch/drupal/content/installing-root-source
+   Now replaced by: https://root.cern.ch/build-root-old-method
+
+   1. get the sources of the latest ROOT from:
+      https://root.cern.ch/content/release-53436
+
+      Note 1: you can unzip root locally in any directory, resulting in <path>/root
+
+      Note 2: If you want to install root in a fixed location please read:
+              https://root.cern.ch/build-root-old-method
+
+   2. set ROOTSYS to the `root' directory:
+
+            sh family:
+              export ROOTSYS=<path>/root
+            csh family
+              setenv ROOTSYS <path>/root
+
+   3. now type the build commands:
+
+            all shells:
+              ./configure --help    [optional, shows e.g. <arch> for supported architectures]
+              ./configure [<arch>]  [e.g. <arch>= linux or macosx (32bit) or macosx64 (64bit)]
+              make                  [or, make -j2 for dual CPU machines]
+
+            Note: ./configure should automatically detect the architecture, if not use e.g.
+              ./configure linux (32bit) ot linuxx8664gcc (64bit)
+
+   4. add bin/ to PATH and lib/ to LD_LIBRARY_PATH.
+
+            sh family:
+              . bin/thisroot.sh
+
+            csh family
+              source bin/thisroot.csh
+
+   5. add $ROOTSYS/bin to PATH and $ROOTSYS/lib to LD_LIBRARY_PATH:
+
+            sh family: 
+              export ROOTSYS=<path>/root
+              export PATH=$ROOTSYS/bin:$PATH
+              export LD_LIBRARY_PATH=$ROOTSYS/lib:$LD_LIBRARY_PATH
+              export DYLD_LIBRARY_PATH=$ROOTSYS/lib:$DYLD_LIBRARY_PATH        (Mac OS X only)
+            csh family:
+              setenv ROOTSYS <path>/root
+              setenv PATH ${ROOTSYS}/bin:${PATH}
+              setenv LD_LIBRARY_PATH ${ROOTSYS}/lib:${LD_LIBRARY_PATH}
+              setenv DYLD_LIBRARY_PATH ${ROOTSYS}/lib:${DYLD_LIBRARY_PATH}    (Mac OS X only)
+              rehash
+
+            Note 1: it is best to include above lines in e.g. ".bashrc" or ".bash_profile"
+            
+            Note 2: at least on Yosemite, El Capitan and Sierra the environment variables 
+                    LD_LIBRARY_PATH and DYLD_LIBRARY_PATH are no longer necessary, so you 
+                    can delete or uncomment the corresponding lines.
+
+            Note 3: if you install on fixed location, e.g. /usr/local, then the
+                    environment variable ROOTSYS is also not necessary.
+
+   6. try running root:
+
+            all shells:
+              root
+
+
+
+ Ib.  Install ROOT for Mac OS X
+ ------------------------------
+
+   Mac users can either install ROOT from source or use the recommended binary
+   version of ROOT. For Leopard you need to compile the source:
+   root_v5.32.01.source.tar.gz (https://root.cern.ch/content/release-53201)
+
+   For Snow Leopard and Lion there exist binaries for 32 bit and 64bit, however,
+   since the xps binary for BioC 2.13 is built on Snow Leopard for 64 bit you 
+   need to install:
+   root_v5.34.05.macosx106-x86_64-gcc-4.2.tar.gz (https://root.cern.ch/content/release-53405)
+
+   For Mountain Lion there exists a 64 bit binary:
+   root_v5.34.05.macosx64-10.8-i386.tar.gz (https://root.cern.ch/content/release-53405)
+   
+   Note: Maybe version root_v5.34.36 will also work on these systems, however,
+         you would need to compile it from source.
+
+   Personally, I am a Mac user and did all my development on my MacBook Pro,
+   where I have installed WinXP, Win7 and openSUSE 11.4 using VMware Fusion 
+   in order to test xps for these architectures. 
+   I prefer to install root from source.
+
+   On Leopard I install the 32 bit version:
+      ./configure macosx 
+      make
+      . bin/thisroot.sh
+
+   On Snow Leopard I install the 64 bit version:
+      ./configure macosx64
+      make
+      . bin/thisroot.sh
+
+   On Lion I install the 64 bit version:
+     ./configure macosx64 --with-f77="/usr/bin/gfortran-4.2"
+      make
+      . bin/thisroot.sh
+
+   I did not have Mountain Lion for testing purposes.
+
+   Note:
+   I recommend to install ROOT in a directory which can be shown in the Mac
+   Finder, e.g. in the home directory or another subdirectory. I do NOT
+   recommend to install ROOT in directory /usr/local/ which is not displayed
+   in the Finder.
+
+
+
+ Ic.  Install ROOT for Mac OS X Mavericks and Yosemite
+ -----------------------------------------------------
+
+   First I have installed XQuartz from:
+   http://xquartz.macosforge.org/downloads/SL/XQuartz-2.7.7.dmg
+
+   Then I have installed Xcode and the 'Command Line Tools ' for Xcode. 
+
+   At last I have installed gfortran from:
+   http://cran.r-project.org/bin/macosx/tools/gfortran-4.2.3.dmg
+
+   Then you need to create in your home directory the file '.bashrc'
+
+   Here is as example my '.bashrc' file:
+
+# - - - - - - - - - - - - - - - - - -
+# .bashrc
+
+# User specific aliases and functions
+
+#svn
+export PATH=$PATH:/usr/local/bin
+
+# latex
+export PATH=/usr/texbin:$PATH
+
+# ROOT settings
+export MACOSX_DEPLOYMENT_TARGET=10.9
+export TMPDIR=/Users/cstrato/temp
+
+# here you add your path to root
+export ROOTSYS=/Volumes/GigaData/ROOT/root
+export PATH=$ROOTSYS/bin:$PATH
+#export LD_LIBRARY_PATH=$ROOTSYS/lib:$LD_LIBRARY_PATH
+#export DYLD_LIBRARY_PATH=$ROOTSYS/lib:$DYLD_LIBRARY_PATH
+
+# Source global definitions
+if [ -f /etc/bashrc ]; then
+    . /etc/bashrc
+fi
+# - - - - - - - - - - - - - - - - - -
+
+   Note: LD_LIBRARY_PATH and DYLD_LIBRARY_PATH should no longer be necessary
+         so I have commented them out. If not, please uncomment them.
+
+   Usually I compile ROOT from source, see below. 
+   However, you can also download ROOT binaries.
+
+   For Mavericks you need to download:
+   root_v5.34.36.macosx64-10.9-clang60.dmg (https://root.cern.ch/content/release-53436)
+
+   For Yosemite you need to download:
+   root_v5.34.36.macosx64-10.10-clang70.dmg or root_v5.34.36.macosx64-10.10-clang70.tar.gz
+   from: https://root.cern.ch/content/release-53436
+   (As far as I know, older versions of ROOT do not run under Yosemite.)
+
+   To compile ROOT I have downloaded the source root_v5.34.36.source.tar.gz from:
+   https://root.cern.ch/content/release-53436
+
+   After extracting root in my home directory I did compile root by typing in the Terminal:
+   $ ./configure macosx64 --with-f77="/usr/bin/gfortran-4.2"
+   $ make
+   $ . bin/thisroot.sh
+
+   Note that in this way ROOT is compiled with the clang/clang++ compiler
+   and not with gcc/g++!!! 
+   I tried to compile root with gcc/g++ but did only get error messages.
+
+   To test if ROOT is ok I did run the tutorials from xterm:
+   $ cd /Users/cstrato/root/tutorials
+   $ root
+   [root 0] .x demos.C
+    run some tutorials from the appearing buttons then quit root:
+   [root 1] .q
+
+   After installing R-3.x.x I have also installed MacTex from:
+   http://mirror.ctan.org/systems/mac/mactex/mactex-basic.pkg
+   http://mirror.ctan.org/systems/mac/mactex/mactex-additions.pkg
+
+   To install Bioconductor packages including xps I usually create the
+   following sub-directories, e.g.:
+   /Users/cstrato/Library/R/3.0/library
+
+   Now comes the important part in order to compile xps with clang/clang++:
+   In you home directory you need to create an invisible directory '.R' (dot R)
+   by typing in xterm:
+   $ mkdir '.R'
+
+   Then you need to create a text file named 'Makevars', which contains
+   the following four lines:
+   CC=clang
+   CXX=clang++
+   CFLAGS="-mtune=native -g -O2 -Wall -pedantic -Wconversion"
+   CXXFLAGS="-mtune=native -g -O2 -Wall -pedantic -Wconversion"
+
+   The file 'Makevars' must be put into the invisible directory '.R'.
+
+   Now you are able to compile xps with clang/clang++, e.g.:
+   R CMD INSTALL -l ~/Library/R/3.0/library xps_1.36.0.tar.gz
+
+   To check if xps does work correctly I do also:
+   R CMD check xps_1.36.0.tar.gz
+
+   Note: If the new version does not work please use 'xps_1.34.0.tar.gz'
+
+
+
+ Id.  Install ROOT for Mac OS Sierra
+ -----------------------------------
+
+   First I have installed XQuartz, currently version XQuartz-2.7.11.dmg
+
+   Then I have installed Xcode 8.1 and the 'Command Line Tools ' for Xcode. 
+
+   At last I have installed gfortran from:
+   http://coudert.name/software/gfortran-6.1-ElCapitan.dmg
+
+   Then you need to create in your home directory the file '.bashrc', see e.g. Ic
+
+   Since currently there does not exist a ROOT binary for Sierra and Xcode 8
+   you need to compile it from the source, which you can download from:
+   https://root.cern.ch/download/root_v5.34.36.source.tar.gz
+
+   NOTE:
+   You can no longer compile root with configure/make, since the ROOT
+   developers have switched to 'Cmake'
+
+   First you need to download Cmake from:
+   https://cmake.org/download/cmake-3.7.1-Darwin-x86_64.dmg
+
+   For command line use you need to add in .bashrc:
+   PATH="/Applications/CMake.app/Contents/bin":"$PATH"
+
+   In oder to compile root with cmake you need to create a build dir, e.g.:
+   $ mkdir /Volumes/T3Data/ROOT/root
+   $ cd /Volumes/T3Data/ROOT/root
+
+   Cmake requires you to provide the directory containing the source code, e.g.:
+   $ cmake /Volumes/T3Data/ROOT/src/root
+   $ cmake --build .
+   $ . bin/thisroot.sh
+
+   Then you can test 'root' and install 'xps' as described above (Ic).
+
+
+
+ Ie.  Install ROOT for Mac OS El Capitan
+ ---------------------------------------
+
+   This is a special case since for BioC 3.5 the new Mac server 'veracruz2' has
+   installed El Capitan, has compiled ROOT from souce in fixed location,
+   and has built an xps binary, which contains the directory path of ROOT 
+   hardcoded. Thus you have the following two possibilities:
+   
+   
+   a, download a ROOT binary and install 'xps' from source:
+   
+      You can download the following binaries from https://root.cern.ch/content/release-53436:
+      - root_v5.34.36.macosx64-10.11-clang70.dmg
+      - root_v5.34.36.macosx64-10.11-clang70.tar.gz
+
+      Now you can test 'root' and install 'xps' as described above (Ic):
+      R CMD INSTALL -l ~/Library/R/3.4/library xps_1.36.0.tar.gz
+      R CMD check xps_1.36.0.tar.gz
+
+   
+   b, build ROOT from source and install the 'xps' binary from BioC 3.5
+   
+      As for Sierra (see Id) you need to install 'Cmake' since ROOT can no longer
+      be compiled with 'make'. Then you need to compile ROOT in fixed directory
+      '/usr/local/root' as described by Herve Pages in:
+      https://stat.ethz.ch/pipermail/bioc-devel/2017-April/010931.html
+
+      The reason is that the user need to have the ROOT libraries at these locations,
+      too, since the rpath is now hardcoded in xps.so.
+      
+      In addition to XCode you probably need to install the compiler clang 4.0.0
+      which is available from: http://r.research.att.com/libs/
+      
+   Note: Since I do not have a Mac running El Capitan, I could not test any of
+         these procedures. Please let me know if you have problems.
+
+
+
+ If.  Install ROOT for Windows XP, Vista and Windows 7 (32 bit only)
+ -------------------------------------------------------------------
+
+   For Windows users it is important to install a binary version of ROOT
+   compiled with MinGW, currently version root_v5.32.03:
+   Currently you can download this ROOT version from:
+   https://docs.google.com/file/d/0B0qZ3XBoK1ubVzl5MHBEaWxQdW8/edit
+   If this does not work, please contact me to get 'root-mingw-O2.7z' of size 37MB
+
+   It is recommended to install ROOT in the default directory C:\root.
+   Furthermore, it is necessary to set the environment variable ROOTSYS:
+   under Windows you can use `System' in the control panel or the
+   properties of `My Computer' (under the `Advanced' tab).
+   Simply add: ROOTSYS=C:\root\bin 
+          (or: ROOTSYS=C:\root      if you add %ROOTSYS%\bin to PATH)
+
+   Note: 
+   The only possibility was to compile ROOT with MinGW, the compiler used by R.
+   Many people had tried to compile ROOT with MinGW, but have failed.
+   Luckily, Alexey Lebedev has recently succeeded to compile ROOT with MinGE, see:
+   http://root.cern.ch/phpBB3/viewtopic.php?f=3&t=15818&sid=5317206c83b9e2122ec5850720a65d05
+   He did create the binary 'root-mingw-O2.7z' mentioned above.
+
+   NOTE from Dec 2016:
+   Sadly, with the current versions of R it is no longer possible to install
+   ROOT and thus use 'xps', since the new Windows toolchain for R-3.3.0 requires
+   to use gcc/g++ 4.9.3, see: https://stat.ethz.ch/pipermail/bioc-devel/2016-March/008935.html
+   and this is incompatible with the binary 'root-mingw-O2.7z'.
+
+
+
+ Ig.  Notes on  ROOT:
+ --------------------
+
+   Note 1: Alternative ROOT installation
+   If you want to install ROOT in a fixed location, not depending on ROOTSYS,
+   please see: http://root.cern.ch/drupal/content/installing-root-source
+
+   Note 2: ROOT demos
+   Like R, ROOT contains many examples demonstrating the abilities of ROOT.
+   These examples can be run to test if ROOT has been installed correctly.
+   There are two kind of examples, located in subdirectories tutorials and
+   test, respectively:
+
+   1. tutorials:
+   To test root and try some of its tutorials, do:
+      cd root/tutorials
+      root
+      root [0] .x demos.C
+   For other tutorials, see the README file in the tutorials directory.
+
+   2. tests:
+   Examples in the test subdirectory need to be compiled first:
+      cd root/test
+      make
+      root
+      root [0] gSystem.Load("Tetris")
+      root [1] Tetris t
+   For other tests, see the README file in the test directory.
+   
+   Note 3: Source vs binary
+   In principle, it is also possible to download and install binaries
+   for some architectures. However, this is not recommended, since the
+   sources for package 'xps' depend on the ROOT framework, and need
+   to be compiled with the same compiler version as ROOT itself.
+
+   Furthermore, daily versions from ROOT can be downloaded via svn and
+   should work fine with 'xps', however, the current versions 5.32/01 
+   and 5.34/03 have been used to test 'xps' for MacOS X. On Linux I did
+   test only 5.32/01, and on Windows only the MinGW binary 5.32/03.
+
+   Note 4: ROOT fails to compile
+   Like R, the ROOT framework can be installed on many architectures, see
+   the list of supported architectures, when running  "./configure --help".
+   However, ROOT may also compile on a number of other architectures. 
+   In case, the current official source file "root_v5.34.05.source.tar.gz"
+   fails to compile, you can download the current development version from 
+   svn, see:
+      http://root.cern.ch/drupal/content/subversion-howto
+
+   If this still fails and you are still interested to compile ROOT, please
+   contact the RootTalk forum at: http://root.cern.ch/phpBB3/
+   This will help the ROOT developers to eliminate potential problems.
+   
+   Note 5: Can I use ROOT for other purposes?
+   ROOT is a powerful professional C++ framework with many classes,see:
+      http://root.cern.ch/drupal/content/users-guide
+      http://root.cern.ch/drupal/content/reference-guide
+
+   However, even if you never intend to use any of these classes or not
+   even to use C++, but want to develop your own C functions, as many
+   R developers do, ROOT may be of interest to you, since by typing "root"
+   you start a C/C++ interpreter, which allows you to test your functions
+   without the need to compile them first. Simply create a text file, 
+   called a macro, containing your C functions.
+
+   As an example create a text file "helloROOT.C" (the '.C' extension is
+   important), containing the simple function:
+
+         void hello_root()
+         {
+            cout << "Hello R, welcome to ROOT!" << endl;
+         }
+
+   After starting ROOT, type: ('.L' will load your text file)
+
+         root [0] .L helloROOT.C
+         root [1] hello_root()
+         Hello R, welcome to ROOT!
+         root [2] .q
+
+   When your function works, then you can compile it directly within
+   a ROOT session by typing ".L helloROOT.C+". Adding the '+' will
+   automatically start the compiler and create a shared library.
+   However, in this case you need to include the necessary header
+   files first, in this case "#include <iostream>", then start ROOT:
+
+         root [0] .L helloROOT.C+
+         Info in <TUnixSystem::ACLiC>: creating shared library /Volumes/CoreData/CRAN/./helloROOT_C.so
+         root [1] hello_root()   
+         Hello R, welcome to ROOT!
+         root [2] .q
+
+   For more information, please contact the ROOT User Guide:
+      http://root.cern.ch/drupal/content/users-guide
+      
+   Note 6: Please note that all comments regarding ROOT apply to ROOT 5.x
+   If you want to use ROOT for purposes independent of 'xps', you should 
+   download and use the new version ROOT 6.x since ROOT 5.x is officially
+   no longer supported.
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+II.  Install package 'xps':
+
+ IIa.  Install 'xps' from source
+ -------------------------------
+
+   Currently, xps can be downloaded as gezipped source file "xps_1.36.0.tar.gz"
+   for MacOS X and for Linux.
+
+   It can be installed with:
+      R CMD INSTALL xps_1.36.0.tar.gz
+   or e.g. on a Mac in the User library:
+      R CMD INSTALL -l ~/Library/R/library xps_1.36.0.tar.gz
+
+   However, the recommended way to install packages from source is:
+      source("http://bioconductor.org/biocLite.R")
+      biocLite("xps", type="source")
+
+
+
+ IIb.  Install 'xps' as binary
+ -----------------------------
+
+   Package xps can also be installed as binary for MacOS X from the Bioconductor 
+   website using:
+      source("http://bioconductor.org/biocLite.R")
+      biocLite("xps")
+
+   Important note: 
+   Please note that Bioconductor has built the xps binaries for release BioC 3.4
+   and BioC 3.5 using ROOT version root_v5.34.36 for Mac. Thus it is essential to 
+   install this ROOT version first, otherwise calling xps may result in an error message.
+   You can always download any version of root from: 
+   https://root.cern.ch/releases
+
+
+
+ IIc.  Install 'xps' for Windows XP, Vista, and Windows 7
+ --------------------------------------------------------
+
+   The Windows binary of xps can be downloaded from the Bioconductor web site, and
+   installed using: biocLite("xps")
+
+   If you run xps from Rterm check if `System' in the control panel does contain the 
+   following environment variables:
+      PATH:   C:\Programs\R\R-3.0.0\bin;%ROOTSYS%\bin;
+      ROOTSYS:C:\root
+
+   If you want to install xps from source, then you need to do the following:
+   You can still install the MinGW binary for ROOT and the R binary but in addition
+   you need to install the following:
+   - Rtools30.exe from: http://www.murdoch-sutherland.com/Rtools/
+   - ActivePerl-5.16.2.1602-MSWin32-x86-296513.msi
+   - basic-miktex-2.9.4521.exe
+
+   Then you can install xps from source as usual:
+      R CMD INSTALL xps_1.20.0.tar.gz
+
+   NOTE from Dec 2016:
+   Sadly, with the current versions of R it is no longer possible to install
+   ROOT and thus use 'xps', since the new Windows toolchain for R-3.3.0 requires
+   to use gcc/g++ 4.9.3, see: https://stat.ethz.ch/pipermail/bioc-devel/2016-March/008935.html
+   and this is incompatible with the binary 'root-mingw-O2.7z'.
+
+
+
+ IId.  Tested architectures (outdated)
+ -------------------------------------
+
+   Currently, package 'xps' has been built (with R CMD INSTALL) and
+   passed R CMD check with no errors and no warnings on the following computers:
+   1. MacBook Pro Core i7 2.4GHz with 8 GB RAM running MacOS X 10.7.5
+      R versions tested: R-2.14.x, R-2.15.2
+   1. MacBook Pro Core 2 Duo 2GHz with 2 GB RAM running MacOS X 10.6.3 and 10.4.11
+      R versions tested: R-2.7.x, R-2.8.x, R-2.9.x, R-2.10.x, R-2.11.x, R-2.12.x,
+      R-2.13.x, R-2.14.x
+   2. PowerBook Titanium G4 550MHz with 1 GB RAM running MacOS X 10.4.9 and 10.4.11
+      R versions tested: R-2.5.0, R-2.6.0, R-2.8.0
+   3. HP Compaq nx6110 Intel Centrino 1.4 GHz with 512 MB RAM with Fedora Core 4
+      R versions tested: R-2.4.1, R-2.6.0, R-2.7.0, R-2.7.1
+   4. HP Compaq nx6110 Intel Centrino 1.4 GHz with 512 MB RAM with Windows XP
+      R versions tested: R-2.6.2, R-2.7.0, R-2.7.1
+   5. VMware Fusion on MacBook Pro Core Duo running Windows XP or openSUSE 11.3
+      R versions tested: R-2.9.x, R-2.10.x, R-2.11.x, R-2.12.x, R-2.13.x, R-2.14.x
+   6. VMware Fusion on MacBook Pro Core i7 running Windows XP or Windows 7
+      R versions tested: R-2.15.2
+      
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

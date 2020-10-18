@@ -1,0 +1,31 @@
+# check if ROOT is installed in fixed location:
+echo "testing for presence of ROOT..."
+
+ROOTEXE=`perl 'findroot.pl'`
+if [ "${ROOTEXE}" = "ERR_ROOTSYS" ]; then
+   echo ""
+   echo "${R_PACKAGE_NAME} configuration error:"
+   echo ""
+   echo "   The environment variable ROOTSYS was not found."
+   echo "   Please set ROOTSYS to the directory where ROOT is located."
+   echo ""
+   echo "   Please consult the README file for more information."
+   echo ""
+   exit 1
+elif [ "${ROOTEXE}" = "ERR_ROOTEXE" ]; then
+   echo ""
+   echo "${R_PACKAGE_NAME} configuration error:"
+   echo ""
+   echo "   The ROOT binary root.exe was not found in directory ${ROOTSYS}/bin."
+   echo "   Please install ROOT for Windows and/or check ROOTSYS."
+   echo ""
+   echo "   Please consult the README file for more information"
+   echo ""
+   exit 1
+else
+   echo "   found ${ROOTEXE} of ROOT in directory ${ROOTSYS}/bin...OK"
+#   echo "   found ROOT version `root-config --version` in directory `root-config --prefix`"
+fi
+
+
+exit 0

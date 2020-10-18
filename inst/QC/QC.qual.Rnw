@@ -1,0 +1,120 @@
+\section{Additional quality controls by fitting probe level models}
+
+ In addition to the quality assessments presented above, the dedicated S4 Class \Rclass{QualTreeSet} 
+ allows a detailed evalutation of raw data and normalized data by fitting probe level models. \\
+
+\subsection{Evaluating chip quality} 
+
+ First, Figure \ref{RNADegradationPlot} shows an RNA degradation plot. In this plot each array is
+ represented by a single line. \\
+
+\begin{figure}[htpb]
+\begin{center}
+  \includegraphics{RNADegradationPlot.png}
+  \caption{RNA degradation plot.}
+  \label{RNADegradationPlot}
+\end{center}
+\end{figure}
+
+ An RNA degradation plot can give some idea of how much degradation of mRNA has occured. 
+
+
+\pagebreak
+ Figure \ref{RNADegradationSlope} shows the slope of an RNA degradation plot. \\
+
+\begin{figure}[htpb]
+\begin{center}
+  \includegraphics{RNADegradationSlope.png}
+  \caption{The slope of the RNA degradation plot.}
+  \label{RNADegradationSlope}
+\end{center}
+\end{figure}
+
+ Any array that has a slope which is very different from the others should be considered
+ as outlier. 
+
+
+\pagebreak
+ Next, Figure \ref{BorderPlotPos} shows a so called "border elements plot", which is created by analyzing
+ the positive control elements on the outer edges of the Affymetrix arrays. This helps to 
+ visualise how consistent the hybridization is around the edges of the arrays. \\
+
+\begin{figure}[htpb]
+\begin{center}
+  \includegraphics{BorderPlotPos.png}
+  \caption{Border elements plots for positive control elements.}
+  \label{BorderPlotPos}
+\end{center}
+\end{figure}
+
+ Large variations in positive controls can indicate non-uniform hybridization or gridding problems. 
+
+
+\pagebreak
+ Figure \ref{BorderPlotNeg} shows the "border elements plot" for the negative control elements on the
+ outer edges of the Affymetrix arrays. \\
+
+\begin{figure}[htpb]
+\begin{center}
+  \includegraphics{BorderPlotNeg.png}
+  \caption{Border elements plots for negative control elements.}
+  \label{BorderPlotNeg}
+\end{center}
+\end{figure}
+
+ Variations in the negative controls indicate background fluctuations. 
+
+
+\pagebreak
+ As a further test Figure \ref{COIPlot} shows "Center-Of-Intensity" (COI) plots of positive and 
+ negative border elements. \\
+
+\begin{figure}[htpb]
+\begin{center}
+  \includegraphics{COIPlot.png}
+  \caption{Center-Of-Intensity plots for positive and negative border elements.}
+  \label{COIPlot}
+\end{center}
+\end{figure}
+
+ If the hybridization is uniform across the array, the location of the COI for the positive/negative 
+ elements will be located at the physical center of the array. Spatial variations in the hybridization 
+ or misalignment of the grid used to determine the cell intensities will cause the COI to move from center. 
+
+
+\pagebreak
+\subsection{Fitting probe level models} 
+
+ Normalized Unscaled Standard Errors (NUSE) plots and Relative Log Expression (RLE) plots can also 
+ be used for assessing chip quality. \\
+
+ Figure \ref{NUSEPlot} shows the NUSE plot for the normalized expression measures. In this plot the
+ SE estimates are normalized such that for each probe set the median standard error across all arrays 
+ is equal to 1. \\
+
+\begin{figure}[htpb]
+\begin{center}
+  \includegraphics{NUSEPlot.png}
+  \caption{NUSE plot.}
+  \label{NUSEPlot}
+\end{center}
+\end{figure}
+
+ An array were there are elevated standard errors relative to the other arrays is typically of lower quality. 
+
+
+\pagebreak
+ Figure \ref{RLEPlot} shows the RLE plot for the normalized expression measures.  For each 
+ probeset and array ratios are calculated between the log-expression of a probeset and the median 
+ expression of this probeset across all arrays. Assuming that only few genes are differentially 
+ expressed across arrays means that most of these RLE values will be centered close to 0.
+
+\begin{figure}[htpb]
+\begin{center}
+  \includegraphics{RLEPlot.png}
+  \caption{RLE plot.}
+  \label{RLEPlot}
+\end{center}
+\end{figure}
+
+ An array that has problems will have a larger spread, and/or will not be centered at 0. \\

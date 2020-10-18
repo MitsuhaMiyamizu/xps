@@ -1,0 +1,919 @@
+                                CHANGELOG
+
+This file documents major changes made between different development versions of xps
+
+
+#-----------------------------------------------------------------------------------#
+r49005 | c.stratowa | 2010-08-24 22:55:46 +0200 (Tue, 24 Aug 2010) | 2 lines
+
+svn commit -m "update to xps-1.9.5
+- update import.data to use make.names(celnames) to protect against certain characters"
+
+# changed in xps-1.9.5
+DESCRIPTION
+import.data.R: use make.names(celnames) to protect against certain characters
+import.data.Rd
+
+
+#-----------------------------------------------------------------------------------#
+r48972 | c.stratowa | 2010-08-22 19:21:14 +0200 (Sun, 22 Aug 2010) | 3 lines
+
+svn commit -m "update to xps-1.9.4
+- update root.profile.R, macroDrawProfilePlot.C to select subset of trees
+- in read.table set stringsAsFactors=FALSE"
+
+# changed in xps-1.9.4
+DESCRIPTION
+NEWS
+methods.SchemeTreeSet.R: read.table(..,stringsAsFactors=FALSE,)
+methods.ProcesSet.R: read.table(..,stringsAsFactors=FALSE,)
+export.R: read.table(..,stringsAsFactors=FALSE,)
+root.profile.R, macroDrawProfilePlot.C: subset of trees
+root.profile.Rd
+
+
+#-----------------------------------------------------------------------------------#
+r47906 | c.stratowa | 2010-07-04 16:34:32 +0200 (Sun, 04 Jul 2010) | 4 lines
+
+svn commit -m "update to xps-1.9.3
+- update method XPreFilter::Calculate() to handle exon arrays correctly
+- in xpsUniFilter() update part for unitestFilter
+- update script4exon.R"
+
+# changed in xps-1.9.3
+DESCRIPTION
+NEWS
+CHANGELOG 
+methods.ExprTreeSet.R: xpsUniFilter() update part for unitestFilter
+XPSFilter.cxx:   XPreFilter::Calculate(): brchj[j]->GetEntry(id); id->i !!
+script4exon.R
+
+
+#-----------------------------------------------------------------------------------#
+r47560 | c.stratowa | 2010-06-20 22:50:07 +0200 (Sun, 20 Jun 2010) | 2 lines
+
+svn commit -m "update to xps-1.9.2
+- update Makefile and Makefile.arch"
+
+# changed in xps-1.9.2
+DESCRIPTION
+Makefile.arch  (from svn trunk)
+
+
+#-----------------------------------------------------------------------------------#
+r47559 | c.stratowa | 2010-06-20 22:04:39 +0200 (Sun, 20 Jun 2010) | 6 lines
+
+svn commit -m "update to xps-1.9.1
+- update XProcesSet::GetTranscriptID(unit,..)
+- in XPSPreprocessing, XPSNormation remove GetTranscriptID(unit,..)
+- update XAnalySet::ExportFilterTrees() and XUnivarSet::ExportUnivarTrees() for exon arrays
+- in validBgrd() replace data with bgrd
+- add script4schemes.R to examples"
+
+# changed in xps-1.9.1
+DESCRIPTION
+NEWS
+script4xps.R
+script4schemes.R
+methods.DataTreeSet.R:  validBgrd (data->bgrd)
+XPSFilter.cxx:   Short_t okay -> Int_t okay
+XPSAnalysis.cxx: update  XAnalySet::ExportFilterTrees(), XUnivarSet::ExportUnivarTrees() for exon arrays
+XPSPreprocessing, XPSNormation: remove GetTranscriptID(unit,..) since present in XPSProcessing
+XPSProcessing.cxx: update GetTranscriptID(unit,..)
+
+
+#-----------------------------------------------------------------------------------#
+r46108 | c.stratowa | 2010-04-16 22:16:15 +0200 (Fri, 16 Apr 2010) | 2 lines
+
+svn commit -m "update to xps-1.7.10
+- update firma.Rd"
+
+# changed in xps-1.7.10
+DESCRIPTION
+CHANGELOG 
+firma.Rd
+
+
+#-----------------------------------------------------------------------------------#
+r45861 | c.stratowa | 2010-04-10 22:52:58 +0200 (Sat, 10 Apr 2010) | 3 lines
+
+svn commit -m "update to xps-1.7.9
+- update validData() to handle slot data containing different column types
+- update seExprTreeSet(), rleplot(), mvaplot(), nuseplot()"
+
+# changed in xps-1.7.9
+DESCRIPTION
+NEWS 
+firma.R
+methods.ProcesSet.R: validData
+methods.ExprTreeSet.R: seExprTreeSet, rleplot, mvaplot, nuseplot
+firma.Rd, firma.expr.Rd, firma.score.Rd
+rleplot-methods.Rd
+mvaplot-methods.Rd
+nuseplot-methods.Rd
+export.Rd
+
+
+#-----------------------------------------------------------------------------------#
+r45851 | c.stratowa | 2010-04-09 22:37:46 +0200 (Fri, 09 Apr 2010) | 4 lines
+
+svn commit -m "update to xps-1.7.8
+- add method xpsFIRMA()
+- add functions firma(), firma.expr(), firma.score()
+- add man files firma.Rd, firma.expr.Rd, firma.score.Rd"
+
+# changed in xps-1.7.8
+DESCRIPTION: firma.R
+NAMESPACE
+NEWS 
+CHANGELOG 
+TreeSetClasses.R:  xpsFIRMA
+methods.DataTreeSet.R: xpsFIRMA
+firma.R
+utils.R:  "firma"
+DataTreeSet-class.Rd, rma.Rd
+firma.Rd, firma.expr.Rd, firma.score.Rd
+TStat.h,cxx:   MAD()
+XPSData.h,cxx:  XSpliceExpression
+XPSHybridizer.h,cxx:  XMultichipExpressor, XSpliceExpressor, XFIRMA
+XPSProcessing.cxx: add kTypeExpr="firma"
+XPSPreProcessing.h,cxx:  XExonProcesSet::DoSpliceExpress(), XExonProcesSet::ExportSplxTrees()
+rwrapper.h,cxx:  PreprocessFIRMA()
+xpsLinkDef.h
+
+
+#-----------------------------------------------------------------------------------#
+r45549 | c.stratowa | 2010-03-27 19:11:04 +0100 (Sat, 27 Mar 2010) | 7 lines
+
+svn commit -m "update to xps-1.7.7
+- update bgcorrect.R and normalize.R to warn from using tmpdir resulting in empty root file
+- update NEWS, README
+- add CHANGELOG
+- move InitGroups() from XPSAnalysis to XPSProcessing
+- update script4xps.R, script4exon.R, script4xpsPreprocess.R
+- update man files for exonLevel, dfw, farms, mas5, rma"
+
+# changed in xps-1.7.7
+DESCRIPTION
+NEWS
+CHANGELOG
+README
+bgcorrect.R   tmpdir
+normalize.R   tmpdir
+zzz.R
+xps.Rnw:  validTreetype; 
+XPSProcessing.h,cxx, XPSAnalysis.h,cxx: move InitGroups() to XPSProcessing
+script4xps.R
+script4exon.R
+script4xpsPreprocess.R
+*.Rd: exonLevel,dfw,farms,mas5,rma
+
+
+#-----------------------------------------------------------------------------------#
+r44716 | c.stratowa | 2010-02-15 20:40:17 +0100 (Mon, 15 Feb 2010) | 2 lines
+
+svn commit -m "update to xps-1.7.6
+- XPSPreProcessing.cxx add #include <cstdlib>"
+
+# changed in xps-1.7.6
+DESCRIPTION
+NEWS
+XPSPreProcessing.cxx: add "#include <cstdlib>"
+
+
+#-----------------------------------------------------------------------------------#
+r44705 | c.stratowa | 2010-02-13 19:31:07 +0100 (Sat, 13 Feb 2010) | 2 lines
+
+svn commit -m "update to xps-1.7.5
+- forgot to upload XPSHybridizer.h, XPSSelector.h, XPSNormation.cxx"
+
+
+#-----------------------------------------------------------------------------------#
+r44704 | c.stratowa | 2010-02-13 19:05:40 +0100 (Sat, 13 Feb 2010) | 4 lines
+
+svn commit -m "update to xps-1.7.4
+- XPSUtils, XPSSchemes, XPSData, XPSSelector, XPSFilter add #include <cstdlib>
+- add XManager::GetTree(), move methods from XPSHybridizer to XAlgorithm
+- add file NEWS"
+
+# changed in xps-1.7.4
+DESCRIPTION
+NEWS
+XPSUtils, XPSSchemes, XPSData, XPSSelector, XPSFilter.cxx: add "#include <cstdlib>"
+XPSBase.h,cxx: add XManager::GetTree(), move methods from XPSHybridizer to XAlgorithm
+XPSSelector.h: add XPSSelector::Calculate()
+XPSHybridizer.h,cxx: move methods from XPSHybridizer to XAlgorithm
+XPSPreProcessing.cxx: add *dummy=0 to prevent compiler error
+XPSNormation.cxx: add *dummy=0 to prevent compiler error
+
+
+#-----------------------------------------------------------------------------------#
+r43998 | c.stratowa | 2010-01-13 23:15:29 +0100 (Wed, 13 Jan 2010) | 5 lines
+
+svn commit -m "update to xps-1.7.3
+- add XMedianPolish::StandardError() for NUSE
+- add ExprTreeSet methods validSE(), nuseplot(), rleplot()
+- update XPSSchemes.cxx to allow to export layout trees for incomplete *.CLF files
+- update examples/updateAnnotation.R"
+
+# changed in xps-1.7.3
+DESCRIPTION
+/inst/rootdata/tmp_Test3RMA.root
+callplot-,mvaplot-,nuseplot-,rleplot-.Rd
+# in R code
+TreeSetClasses.R
+methods.ExprTreeSet.R: validSE(), nuseplot(), rleplot()
+updateAnnotation.R (for vector of probesets)
+# in rootcode:
+XPSSchemes.cxx 
+TStat.h,cxx: Quantile(), IQR(), Median()
+XPSHybridizer.h,cxx: XExpressor::SetOptions(), XMedianPolish::Calculate(), XMedianPolish::StandardError()
+rwrapper.cxx   PreprocessRMA
+
+
+#-----------------------------------------------------------------------------------#
+r43526 | c.stratowa | 2009-12-11 23:09:24 +0100 (Fri, 11 Dec 2009) | 4 lines
+
+svn commit -m "update to xps-1.7.2
+- update XExonChip::ImportTransAnnotation() to correct annot_version
+- add examples/updateAnnotation.R
+- update script4xps.R"
+
+# changed in xps-1.7.2
+DESCRIPTION
+XPSSchemes.cxx 
+updateAnnotation.R
+script4xps.R
+
+
+#-----------------------------------------------------------------------------------#
+r43208 | c.stratowa | 2009-11-22 22:27:40 +0100 (Sun, 22 Nov 2009) | 6 lines
+
+svn commit -m "update to xps-1.7.1
+- allow using mas5() and mas5.call() with plate arrays w/o MMs 
+- update XGeneChip::ReadBinaryData() for plate arrays
+- update XGCProcesSet::DoExpress() and XGCProcesSet::DoCall() for plate arrays
+- correct PreprocessMAS5Call() for using bgcorrect
+- update script4xps.R"
+
+# changed in xps-1.7.1
+DESCRIPTION
+XPSSchemes.cxx   XGeneChip::ReadBinaryData
+PreProcessing.cxx   XGCProcesSet::DoCall  XGCProcesSet::DoExpress
+rwrapper.cxx   PreprocessMAS5Call
+script4xps.R
+
+
+#-----------------------------------------------------------------------------------#
+r42684 | p.aboyoun | 2009-10-28 00:33:29 +0100 (Wed, 28 Oct 2009) | 1 line
+
+svn commit -m "update to xps-1.5.19
+- update script4xps.R"
+
+# changed in xps-1.5.19
+DESCRIPTION
+script4xps.R
+
+
+#-----------------------------------------------------------------------------------#
+r42552 | c.stratowa | 2009-10-21 23:51:59 +0200 (Wed, 21 Oct 2009) | 2 lines
+
+svn commit -m "update to xps-1.5.18
+- add parameter bgcorrect.option to function mas5.call()"
+
+# changed in xps-1.5.18
+DESCRIPTION
+mas5.call.R
+methods.DataTreeSet.R 
+rwrapper.h,cxx
+mas5.call.Rd
+
+
+#-----------------------------------------------------------------------------------#
+r42465 | c.stratowa | 2009-10-18 00:22:29 +0200 (Sun, 18 Oct 2009) | 3 lines
+
+svn commit -m "update to xps-1.5.17
+- update README
+- update dates of vignettes"
+
+
+#-----------------------------------------------------------------------------------#
+r41595 | c.stratowa | 2009-09-09 23:10:04 +0200 (Wed, 09 Sep 2009) | 4 lines
+
+svn commit -m "update to xps-1.5.16
+- allow handling of probesets w/o MMs on Citrus.CDF
+- update XGeneChip::ReadData() for Citrus.CDF
+- update XGCProcesSet::DoExpress() and XGCProcesSet::DoCall() for Citrus array"
+
+# changed in xps-1.5.16
+DESCRIPTION
+XPSPreprocessing.h,cxx 
+XPSSchemes.cxx   (max = max+1 to prevent buffer overflow with Citrus.CDF)
+
+
+#-----------------------------------------------------------------------------------#
+r41420 | c.stratowa | 2009-08-30 19:24:15 +0200 (Sun, 30 Aug 2009) | 4 lines
+
+svn commit -m "update to xps-1.5.15
+- validBgrd() implement 'which'
+- add vignette xpsPreprocess.Rnw
+- add example macro4xpsPreprocess.R"
+
+# changed in xps-1.5.15
+DESCRIPTION
+methods.DataTreeSet.R  (validBgrd() implement "which")
+methods.ExprTreeSet.R  (supsmu, lowess)
+normalize.R  (select="separate" vs "all","pmonly")
+express.Rd
+normalize.Rd
+XPSPreprocessing.cxx   (???verbose, comments)
+XPSNormation.cxx   (verbose, comments)
+macro4xpsPreprocess.R
+xpsPreprocess.Rnw
+figures.png
+xps.bib 
+
+
+#-----------------------------------------------------------------------------------#
+r41213 | c.stratowa | 2009-08-18 22:17:42 +0200 (Tue, 18 Aug 2009) | 9 lines
+
+svn commit -m "update to xps-1.5.14
+- update export() to include read.table(..,comment.char='')
+- update methods.DataTreeSet.R to allow probe-level lowess and supsmu normalization
+- update rwrapper.cxx to allow probe-level lowess and supsmu normalization
+- update DoMultichipExpress() to remove problem with step size stepout for more than 10000 trees
+- protect XSectorBackground, XWeightedBackground against numCells4Bg=0
+- in XPSNormalizer.cxx change targetinten for logbase
+- in image.dev and boxplot.dev correct missing mar and las
+- make utils namePart, extenPart public and add man"
+
+# changed in xps-1.5.14
+DESCRIPTION
+NAMESPACE  (expose extenPart, namePart)
+namePart.Rd
+extenPart.Rd
+methods.ProcesSet.R  (export: read.table(comment.char=""))
+methods.DataTreeSet.R  (allow lowess and supsmu)
+boxplot.dev.R  (las, mar)
+image.dev.R  (mar)
+XPSPreprocessing.cxx   (change stepout!!!!)
+XPSHybridizer.cxx   (XSectorBackground, XWeightedBackground) protect against numCells4Bg=0
+XPSNormalizer.cxx   (targetinten for logbase)
+rwrapper.cxx   (allow lowess and supsmu)
+
+
+#-----------------------------------------------------------------------------------#
+r40952 | c.stratowa | 2009-08-02 00:08:59 +0200 (Sun, 02 Aug 2009) | 5 lines
+
+svn commit -m "update to xps-1.5.13
+- update export(), attachExpr(), attachCall(), attachPVal() to avoid too many open files
+- update mas5(), xxx.call() and rwrapper.cxx to open root file only once
+- update XPSBase, XPSData, XPSPreprocessing, rwrapper to allow setting bufsize for tree baskets
+- update express() to allow setting bufsize for tree baskets"
+
+# changed in xps-1.5.13
+DESCRIPTION
+README 2x!!
+methods.ProcesSet.R (remove print)
+methods.DataTreeSet.R (remove print) 
+methods.ExprTreeSet.R (remove print) attachExpr
+methods.CallTreeSet.R (remove print) attachCall, attachPVal
+express.R
+XPSBase.h,cxx  bufsize
+XPSData.cxx
+XPSPreprocessing.cxx   (remove print)
+rwrapper.h,cxx   in Express fManager->SetBufSize(bufsize)
+
+
+#-----------------------------------------------------------------------------------#
+r40849 | c.stratowa | 2009-07-26 21:39:19 +0200 (Sun, 26 Jul 2009) | 5 lines
+
+svn commit -m "update to xps-1.5.12
+- add method XGeneChipHyb::CheckChipType() to satisfy miRNA-1_0.CDF
+- update XGCProcesSet::MaxNumberCells() for miRNA-1_0.CDF
+- update XGCProcesSet::DoMultichipExpress() to reduce memory when filling and reading temporary trees
+- update XQuantileNormalizer::Calculate() to reimplement trimmed mean"
+
+# changed in xps-1.5.12
+DESCRIPTION
+XPSData.h,cxx    new function CheckChipType()
+XPSPreprocessing.cxx
+XPSNormalizer.h,cxx
+
+
+#-----------------------------------------------------------------------------------#
+r40783 | c.stratowa | 2009-07-22 22:01:36 +0200 (Wed, 22 Jul 2009) | 2 lines
+
+svn commit -m "update to xps-1.5.11
+- update DoMultichipExpress() to reduce memory when filling temporary trees"
+
+# changed in xps-1.5.11
+DESCRIPTION
+XPSPreprocessing.cxx
+script4xps.R
+
+
+#-----------------------------------------------------------------------------------#
+r40611 | c.stratowa | 2009-07-13 23:06:28 +0200 (Mon, 13 Jul 2009) | 2 lines
+
+svn commit -m "update to xps-1.5.10
+- update XPSPreprocessing.cxx to reduce memory consumption"
+
+# changed in xps-1.5.10
+DESCRIPTION
+XPSPreprocessing.cxx
+XPSNormalizer.cxx  (separate: msk=0 must be fMean2)
+
+
+#-----------------------------------------------------------------------------------#
+r40603 | c.stratowa | 2009-07-12 20:38:59 +0200 (Sun, 12 Jul 2009) | 3 lines
+
+svn commit -m "update to xps-1.5.9
+- update XQuantileNormalizer to reduce memory and increase speed
+- update validOption() to allow 'separate:none'"
+
+# changed in xps-1.5.9
+DESCRIPTION
+ACKNOWLEDGMENT 2x (inst): add Simon de Bernard
+XPSNormalizer.cxx
+utils.R
+
+
+#-----------------------------------------------------------------------------------#
+r40512 | c.stratowa | 2009-07-05 21:11:01 +0200 (Sun, 05 Jul 2009) | 4 lines
+
+svn commit -m "update to xps-1.5.8
+- for root_v5.24.00 C++ functions returning TString must return TString(0) instead of 0
+- update XQuantileNormalizer to allow improved ties handling as option like preprocessCore
+- update rma() and rwrapper.cxx to allow ties handling and to open root file only once"
+
+# changed in xps-1.5.8
+DESCRIPTION
+rma.R
+methods.DataTreeSet.R
+methods.ExprTreeSet.R  => need to remove debug code in normalize.ExprTreeSet!!!
+rma.Rd
+rwrapper.h,cxx
+XPSNormalizer.cxx
+XPSBase.cxx
+XPSUtils.cxx
+XPSProjectHandler.cxx
+XPSData.cxx
+XPSPreprocessing.cxx
+
+
+#-----------------------------------------------------------------------------------#
+r40359 | c.stratowa | 2009-06-28 19:48:10 +0200 (Sun, 28 Jun 2009) | 6 lines
+
+svn commit -m "update to xps-1.5.7
+- update XPSSchemes.cxx to allow using exon background controls
+- update method validCall()
+- add methods validExpr() and validPVal()
+- update vignette APTvsXPS.Rnw
+- update examples script4xps2apt.R and script4bestmatch.R"
+
+# changed in xps-1.5.7
+DESCRIPTION
+NAMESPACE
+ACKNOWLEDGMENT 2x (inst)
+XPSSchemes.cxx
+TreeSetClasses.R
+methods.ExprTreeSet.R
+methods.CallTreeSet.R
+ExprTreeSet-class.Rd
+CallTreeSet-class.Rd
+validData-methods.Rd
+validExpr-methods.Rd
+validCall-methods.Rd
+exonLevel.Rd
+APTvsXPS.Rnw + png
+script4xps2apt.R
+script4bestmatch.R
+
+
+#-----------------------------------------------------------------------------------#
+r40227 | c.stratowa | 2009-06-19 22:25:53 +0200 (Fri, 19 Jun 2009) | 3 lines
+
+svn commit -m "update to xps-1.5.6
+- eliminate buffer overflow in XTukeyBiweight::Calculate()
+- update mas5.R and rwrapper.cxx to open root file only once"
+
+# changed in xps-1.5.6
+DESCRIPTION
+configure.in
+mas5.R
+rwrapper.h,cxx
+XPSHybridizer.cxx
+XPSBase.cxx
+XPSProcessing.cxx
+
+
+#-----------------------------------------------------------------------------------#
+r39990 | c.stratowa | 2009-06-07 23:16:24 +0200 (Sun, 07 Jun 2009) | 3 lines
+
+svn commit -m "update to xps-1.5.5
+- eliminate memory leaks caused by branch addresses
+- update root.expr.R, root.call.R and rwrapper.cxx to open root file only once"
+
+# changed in xps-1.5.5
+DESCRIPTION
+root.expr.R
+root.call.R
+rwrapper.cxx
+XPSnnn.cxx
+
+
+#-----------------------------------------------------------------------------------#
+r39675 | c.stratowa | 2009-05-24 22:05:41 +0200 (Sun, 24 May 2009) | 5 lines
+
+svn commit -m "update to xps-1.5.4
+- update function exonLevel() to use affx=c(4,8,16,32)
+- add new internal function exonLevelIDs()
+- update function dataDataTreeSet() to return correct ids for mask
+- in function image() correct potential bug nrows vs ncols"
+
+
+#-----------------------------------------------------------------------------------#
+r39512 | c.stratowa | 2009-05-17 22:49:14 +0200 (Sun, 17 May 2009) | 3 lines
+
+svn commit -m "update to xps-1.5.3
+- correct memory leak in function XGCProcesSet::DoMultichipExpress()
+- update exonLevel.Rd"
+
+
+#-----------------------------------------------------------------------------------#
+r39499 | c.stratowa | 2009-05-15 22:19:22 +0200 (Fri, 15 May 2009) | 3 lines
+
+svn commit -m "update to xps-1.5.2
+- correct memory leak in function XWeightedBackground::Calculate()
+- change vignette extension to .Rnw"
+
+
+#-----------------------------------------------------------------------------------#
+r39246 | c.stratowa | 2009-04-30 20:13:03 +0200 (Thu, 30 Apr 2009) | 4 lines
+
+svn commit -m "update to xps-1.5.1
+- update validData() to check for duplicate rownames
+- update XGeneChip::ImportProbeInfo() to allow both headers of xxx_probe.tab
+- update XGeneChipHyb::ReadGenericDataHeader() for genetitan plate data"
+
+
+#-----------------------------------------------------------------------------------#
+r38940 | c.stratowa | 2009-04-17 22:30:37 +0200 (Fri, 17 Apr 2009) | 3 lines
+
+svn commit -m "update to xps-1.3.13
+- update DESCRIPTION to mention root version
+- update README"
+
+
+#-----------------------------------------------------------------------------------#
+r38743 | c.stratowa | 2009-04-12 19:00:34 +0200 (Sun, 12 Apr 2009) | 4 lines
+
+svn commit -m "update to xps-1.3.12
+- correct bug in TUnivariateTest::FDR and Hochberg
+- add method TUnivariateTest::BY
+- update method.UniFilter.R and uniTest-methods.Rd"
+
+
+#-----------------------------------------------------------------------------------#
+r38490 | c.stratowa | 2009-04-05 21:20:01 +0200 (Sun, 05 Apr 2009) | 4 lines
+
+update to xps-1.3.11
+- make function exonLevel public and add exonLevel.Rd
+- in xps.def use tabs and delete last empty line
+- change Makefile.win back to MT
+
+
+#-----------------------------------------------------------------------------------#
+r38381 | c.stratowa | 2009-04-01 20:24:02 +0200 (Wed, 01 Apr 2009) | 3 lines
+
+update to xps-1.3.10
+- for testing update Makefile.win for root debug version
+- update DESCRIPTION
+
+
+#-----------------------------------------------------------------------------------#
+r38308 | c.stratowa | 2009-03-30 21:59:36 +0200 (Mon, 30 Mar 2009) | 3 lines
+
+update to xps-1.3.9
+- add function MetaProbesets to xps.def
+- update rwrapper.cxx
+
+
+#-----------------------------------------------------------------------------------#
+r38291 | c.stratowa | 2009-03-29 22:25:22 +0200 (Sun, 29 Mar 2009) | 5 lines
+
+update to xps-1.3.8
+- update all initialize methods to prevent checkS3forClass warnings
+- update bgcorrect.rma, bgcorrect.mas5
+- update script4xps.R, script4exon.R
+- update manual file bgcorrect.Rd
+
+
+#-----------------------------------------------------------------------------------#
+r38191 | c.stratowa | 2009-03-25 21:18:35 +0100 (Wed, 25 Mar 2009) | 4 lines
+
+update to xps-1.3.7
+- update Makefile.win
+- update script4xps.R and script4exon.R
+- update manual files prefilter.Rd and unifilter.Rd
+
+
+#-----------------------------------------------------------------------------------#
+r37561 | c.stratowa | 2009-02-22 22:22:35 +0100 (Sun, 22 Feb 2009) | 3 lines
+
+update to xps-1.3.6
+- update XPSSchemes.cxx to support using genome array as exon arrays
+- update manual files import.xxx.scheme.Rd
+
+
+#-----------------------------------------------------------------------------------#
+r37060 | c.stratowa | 2009-02-01 12:12:50 +0100 (Sun, 01 Feb 2009) | 3 lines
+
+update to xps-1.3.5
+- add code in function import.data() to replace dots, colons in celnames with underscores
+- update copyright 2009
+
+
+#-----------------------------------------------------------------------------------#
+r36442 | c.stratowa | 2009-01-05 21:00:44 +0100 (Mon, 05 Jan 2009) | 5 lines
+
+update to xps-1.3.4
+- correct bug in xpsPreprocess for add.data=FALSE
+- correct sub(.root, .txt, x) to sub(\.root, .txt, x)
+- update root.image() to get setname from setName()
+- add ClassImp for XFARMS and XDFW
+
+
+#-----------------------------------------------------------------------------------#
+r36197 | c.stratowa | 2008-12-21 19:16:16 +0100 (Sun, 21 Dec 2008) | 6 lines
+
+update to xps-1.3.3
+- change variable path of XFolder to gFolderPath (see TFolder)
+- update ExportExprTrees() to allow missing annotation tree
+- correct bug in rwrapper.cxx PreprocessRMA() preventing normalize=FALSE
+- change intensity<- to allow using slot data for further processing
+- add help for intensity<-
+
+
+#-----------------------------------------------------------------------------------#
+r35910 | c.stratowa | 2008-12-12 21:46:07 +0100 (Fri, 12 Dec 2008) | 2 lines
+
+update to xps-1.3.2
+- update XPSBase.cxx NewFile() to handle tmp files for certain dirnames correctly
+
+
+#-----------------------------------------------------------------------------------#
+r34921 | c.stratowa | 2008-10-27 21:34:23 +0100 (Mon, 27 Oct 2008) | 3 lines
+
+update to xps-1.3.1
+- update XPSSchemes.cxx to handle xxx.annot.na26.cvs correctly
+- add function root.merge.data()
+
+
+#-----------------------------------------------------------------------------------#
+r34412 | c.stratowa | 2008-10-12 19:26:18 +0200 (Sun, 12 Oct 2008) | 3 lines
+
+update to xps-1.1.9
+- protect class XRMABackground against defect Affy chips, e.g. zero division
+- protect root.data() etc against duplicate celnames or treenames
+
+
+#-----------------------------------------------------------------------------------#
+r34373 | c.stratowa | 2008-10-09 22:34:08 +0200 (Thu, 09 Oct 2008) | 2 lines
+
+update to xps-1.1.8
+- correct bug in class XINICall resulting in buffer overflow
+
+
+#-----------------------------------------------------------------------------------#
+r34261 | c.stratowa | 2008-10-06 23:40:33 +0200 (Mon, 06 Oct 2008) | 5 lines
+
+update to xps-1.1.7
+- add call method I/NI-call (Talloen et al)
+- remove memory leak in XPSPreProcessing by SafeDelete(unitSelector)
+- reorganize/simplify methods in XPSPreProcessing.cxx
+- reorganize/simplify methods in XPSNormation.cxx
+
+
+#-----------------------------------------------------------------------------------#
+r33719 | c.stratowa | 2008-09-14 22:04:44 +0200 (Sun, 14 Sep 2008) | 9 lines
+
+update to xps-1.1.6
+- prevent import of CEL-files with zero max intensity
+- update functions returning ExprTreeSet to import results as option only
+- update functions returning CallTreeSet to import results as option only
+- update root.density etc to allow saving from R function
+- add root.profile to use root graphics for boxplots
+- add summarization method FARMS (Hochreiter et al)
+- add summarization method DFW (Chen et al)
+- update vignette xps.Snw
+
+
+#-----------------------------------------------------------------------------------#
+r32979 | c.stratowa | 2008-07-30 22:04:02 +0200 (Wed, 30 Jul 2008) | 2 lines
+
+update to xps-1.1.5
+- correct problem in validData for CEL-files starting with numbers
+
+
+#-----------------------------------------------------------------------------------#
+r32927 | c.stratowa | 2008-07-27 22:02:52 +0200 (Sun, 27 Jul 2008) | 6 lines
+
+update to xps-1.1.4
+- update vignette xps.Snw
+- add new vignette APTvsXPS.Snw
+- update examples script4exon.R
+- add examples script4xps2apt.R and script4bestmatch.R
+- update README
+
+
+#-----------------------------------------------------------------------------------#
+r32577 | c.stratowa | 2008-07-05 21:13:51 +0200 (Sat, 05 Jul 2008) | 5 lines
+
+update to xps-1.1.3
+- to allow CEL-names starting with a number, update to read.table(..., check.names=FALSE)
+- update ExprTreeSet to set slot exprtype to correct type
+- add functions root.expr() and root.call()
+- need to change setname for dabg.call() from CallTreeSet to CallSet as for mas5.call()
+
+
+#-----------------------------------------------------------------------------------#
+r32478 | c.stratowa | 2008-06-29 21:02:00 +0200 (Sun, 29 Jun 2008) | 4 lines
+
+update to xps-1.1.2
+- allow different exonlevels for bgrd, normalization, summarization
+- update replacement methods exprs, pvalData, presCall to allow subsetting
+- add function metaProbesets to compute metacoreList.mps for apt
+
+
+#-----------------------------------------------------------------------------------#
+r31752 | c.stratowa | 2008-05-18 19:05:54 +0200 (Sun, 18 May 2008) | 4 lines
+
+update to version xps-1.1.1
+- increase maximum root file size from 2GB to 2TB
+- decrease computation time
+- correct bug preventing export of exon probeset normalized data
+
+
+#-----------------------------------------------------------------------------------#
+
+r31366 | c.stratowa | 2008-04-27 21:06:16 +0200 (Sun, 27 Apr 2008) | 3 lines
+
+update to version xps-0.99.11
+- reorganize C++ methods ExportExprTrees and ExportCallTrees
+  to correct ug resulting in empty exon probeset column
+
+
+#-----------------------------------------------------------------------------------#
+r31198 | c.stratowa | 2008-04-19 22:28:36 +0200 (Sat, 19 Apr 2008) | 4 lines
+
+update to version xps-0.99.10
+- update source code to handle tmpdir correctly on WinXP
+- update examples script4xps.R and script4exon.R
+- update README
+
+
+#-----------------------------------------------------------------------------------#
+r31051 | c.stratowa | 2008-04-12 23:58:01 +0200 (Sat, 12 Apr 2008) | 3 lines
+
+update to version xps-0.99.9
+- update methods namePart, extenPart, validData, validBgrd to handle names with underscores
+- update Makefile.win to work with root 5.19/02
+
+
+#-----------------------------------------------------------------------------------#
+r30930 | c.stratowa | 2008-04-08 22:13:49 +0200 (Tue, 08 Apr 2008) | 4 lines
+
+update to version xps-0.99.8
+- update functions root.xxx to work with WinXP
+- update Makefile clean
+- update examples/script4xps.R
+
+
+#-----------------------------------------------------------------------------------#
+r30827 | c.stratowa | 2008-04-03 19:53:55 +0200 (Thu, 03 Apr 2008) | 2 lines
+
+update to version xps-0.99.7
+- try to remove warning for Mac build
+
+
+#-----------------------------------------------------------------------------------#
+r30783 | c.stratowa | 2008-04-01 23:18:30 +0200 (Tue, 01 Apr 2008) | 2 lines
+
+update to version xps-0.99.6
+- added ifstream::ios::binary to allow reading of xda, calvin files on WinXP
+
+
+#-----------------------------------------------------------------------------------#
+r30739 | c.stratowa | 2008-03-28 21:26:07 +0100 (Fri, 28 Mar 2008) | 2 lines
+
+update to version xps-0.99.5
+- updated files: Makefile.win, configure.win, xps.Snw, README, ACKNOWLEGMENT
+
+
+#-----------------------------------------------------------------------------------#
+r30642 | c.stratowa | 2008-03-24 21:31:10 +0100 (Mon, 24 Mar 2008) | 2 lines
+
+update to version xps-0.99.4
+- updated files: config.win, findvc.pl
+
+
+#-----------------------------------------------------------------------------------#
+r30628 | c.stratowa | 2008-03-22 19:41:44 +0100 (Sat, 22 Mar 2008) | 7 lines
+
+update to version xps-0.99.3
+- added files: config.win, Makefile.win, findroot.pl, findvc.pl
+- package can now be built for Windows XP
+- added possibility to add current date and/or time to root filename
+- added function existsROOTFile
+- updated vignette xps.Snw
+- updated files: README, ACKNOWLEDGMENT
+
+
+#-----------------------------------------------------------------------------------#
+r30206 | c.stratowa | 2008-02-26 20:35:44 +0100 (Tue, 26 Feb 2008) | 3 lines
+
+update to version xps-0.5.0
+- eliminated memory leaks in C++ code parsing generic CEL-files
+- C++ source code can now be compiled with MS Visual C++
+
+
+#-----------------------------------------------------------------------------------#
+r29823 | c.stratowa | 2008-02-04 20:52:43 +0100 (Mon, 04 Feb 2008) | 3 lines
+
+update to version xps-0.4.3
+- new method rawCELName() to get the names of the imported CEL-files
+- update XGeneChip::ImportTransAnnotation() to import alignment with best score
+
+
+#-----------------------------------------------------------------------------------#
+r29712 | c.stratowa | 2008-01-27 22:02:59 +0100 (Sun, 27 Jan 2008) | 3 lines
+
+update to version xps-0.4.2
+- add support to import generic (calvin) CEL-files
+- update method volcanoplot
+
+
+#-----------------------------------------------------------------------------------#
+r29521 | c.stratowa | 2008-01-13 22:37:48 +0100 (Sun, 13 Jan 2008) | 4 lines
+
+update to version xps-0.4.1
+- change DESCRIPTION
+- add method volcanoplot
+- correct update bug in xpsUniFilter
+
+
+#-----------------------------------------------------------------------------------#
+r29403 | c.stratowa | 2008-01-06 18:08:14 +0100 (Sun, 06 Jan 2008) | 6 lines
+
+update to version xps-0.4.0
+- import.data: import CEL-files from different directories
+- updated DESCRIPTION, NAMESPACE
+- added possibility to apply non-sepcific filters and univariate filters
+- added S4 classes Filter, PreFilter, UniFilter
+- added S4 classes FilterTreeSet and AnalysisTreeSet 
+
+
+#-----------------------------------------------------------------------------------#
+r28904 | c.stratowa | 2007-11-25 22:04:33 +0100 (Sun, 25 Nov 2007) | 6 lines
+
+update to version xps-0.3.12
+- updated XGeneChip::ReadData() to allow parsing of AffyProbeMiner CDFs
+- updated S4 class ProjectInfo and file NAMESPACE
+- added class XProjectHandler as base class for XDataManager, XProcessManager
+- updated import.data.R and rwrapper.cxx
+- updated files SchemeTest3.root and DataTest3_cel.root
+
+
+#-----------------------------------------------------------------------------------#
+r28507 | c.stratowa | 2007-11-06 22:13:06 +0100 (Tue, 06 Nov 2007) | 3 lines
+
+update to version xps-0.3.11
+- corrected export.Rd
+- added method MAD() to TStat.h
+
+
+#-----------------------------------------------------------------------------------#
+r28439 | c.stratowa | 2007-11-04 12:11:01 +0100 (Sun, 04 Nov 2007) | 3 lines
+
+update to version xps-0.3.10
+- added chipname to function import.expr.scheme
+- added further annotation items to export
+
+
+#-----------------------------------------------------------------------------------#
+r28285 | c.stratowa | 2007-10-28 20:59:02 +0100 (Sun, 28 Oct 2007) | 3 lines
+
+update to version xps-0.3.9
+- corrected annotation mapping for normation
+- updated output formatting
+
+
+#-----------------------------------------------------------------------------------#
+r28051 | hpages@fhcrc.org | 2007-10-18 03:44:36 +0200 (Thu, 18 Oct 2007) | 1 line
+
+added the xps package to Bioconductor
+
+
+#-----------------------------------------------------------------------------------#

@@ -1,0 +1,7 @@
+
+\begin{figure}[htpb]
+\begin{center}
+  \includegraphics{@PSEUDOIMAGE@.png}
+  \caption{Pseudo-image(s).}
+\end{center}
+\end{figure}

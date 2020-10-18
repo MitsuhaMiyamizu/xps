@@ -1,0 +1,88 @@
+\section{Quality control for normalized expression measures}
+
+ The quality metrics in this section show the distribution of the '@EXPRTYPE@' normalized 
+ expression levels  for each array. \\
+
+
+\subsection{Basic quality plots} 
+
+ Figure \ref{DensityPlotExpr} shows density estimates for each array. \\
+
+\begin{figure}[htpb]
+\begin{center}
+  \includegraphics{DensityPlotExpr.png}
+  \caption{Density plot of normalized expression levels for all samples.}
+  \label{DensityPlotExpr}
+\end{center}
+\end{figure}
+
+
+\pagebreak
+ Figure \ref{BoxplotExpr} shows the corresponding boxplots. \\
+
+\begin{figure}[htpb]
+\begin{center}
+  \includegraphics{BoxplotExpr.png}
+  \caption{Boxplot of normalized expression levels for all samples.}
+  \label{BoxplotExpr}
+\end{center}
+\end{figure}
+
+
+\pagebreak
+\subsection{Between array comparisons} 
+
+ Another possibility to identify problematic arrays is to do between array comparisons. 
+ For this purpose it is possible to compute between arrays correlations and between arrays 
+ distances. \\
+
+ In order to correlate all arrays from an experiment with each other the array-array Spearman 
+ rank correlation coefficients are computed and drawn as heat map Figure \ref{CorrplotExpr}. 
+
+\begin{figure}[htpb]
+\begin{center}
+  \includegraphics{CorrplotExpr.png}
+  \caption{Pairwise differences between arrays, computed as Spearman rank correlation coefficients.}
+  \label{CorrplotExpr}
+\end{center}
+\end{figure}
+
+ Correlation plots are useful for detecting outliers, failed hybridizations, or mistracked samples. 
+ Specifically, these plots can assess between array quality, e.g. arrays belonging to the 
+ same set of replicates should show high correlations, and are able to show patterns that reveal 
+ the experimental design. 
+
+\pagebreak
+ Next the between arrays distances are determined, computed as the MAD of the M-values of each 
+ pair of arrays, and drawn as an array-array expression level distance plot Figure \ref{MADplotExpr}. 
+
+\begin{figure}[htpb]
+\begin{center}
+  \includegraphics{MADplotExpr.png}
+  \caption{Pairwise differences between arrays, computed as the MAD of the differences of the M-values.}
+  \label{MADplotExpr}
+\end{center}
+\end{figure}
+
+ A MAD plot is an exploratory plot that can help detecting outlier arrays and batch effects: 
+ If there is an outlier array you will see vertical and horizontal stripes of darker color in 
+ the plot. Batch effects can be seen as blocks along the diagonal. \\
+
+\pagebreak
+ Finally, plotting the first two principal components from a principal components analysis (PCA) 
+ is used to show the overall structure of the data, see  Figure \ref{PCAplotExpr}. 
+
+\begin{figure}[htpb]
+\begin{center}
+  \includegraphics{PCAplotExpr.png}
+  \caption{Plot of the first two principal components.}
+  \label{PCAplotExpr}
+\end{center}
+\end{figure}
+
+ PCA-plots can be very useful to detect outlier arrays between replicates as well as between 
+ different groups. In most cases replicates or groups are expected to group together, indicating 
+ general similarity in overall expression patterns. 
+
+
+

@@ -1,0 +1,57 @@
+dnl 
+dnl xps
+dnl 
+dnl $Id: configure.in 2007-07-14 $
+dnl
+dnl Generate a "configure" script that check for installation of the
+dnl ROOT framework.
+dnl
+dnl    USAGE:  autoconf
+dnl
+dnl note: adapted from config.in file of package ROracle
+dnl
+
+AC_INIT(src/rwrapper.cxx)
+
+# See "Writing R Extensions"
+: ${R_HOME=`R RHOME`}
+if test -z "${R_HOME}"; then
+   echo "could not determine R_HOME"
+   exit 1
+fi
+CC=`"${R_HOME}/bin/R" CMD config CC`
+CFLAGS=`"${R_HOME}/bin/R" CMD config CFLAGS`
+AC_PROG_CPP
+AC_PROG_CC
+
+# check if ROOT is installed in fixed location:
+if test -z "${ROOTSYS}"; then
+   AC_CHECK_PROG(rootfound, [root-config --prefix], yes, no)
+   if test "$rootfound" = "yes"; then
+       echo "found ROOT version `root-config --version` in directory `root-config --prefix`"
+      exit 0
+   fi
+fi
+
+# else check if ROOT PATH variables are defined:
+# check for ROOTSYS:
+if test -z "${ROOTSYS}"; then
+   echo ""
+   echo "${R_PACKAGE_NAME} configuration error:"
+   echo ""
+   echo "   You must set the shell variable ROOTSYS to the"
+   echo "   directory where ROOT resides and re-run R CMD INSTALL"
+   echo "   e.g., (using Bourne shell syntax):"
+   echo ""
+   echo "      export ROOTSYS=/opt/root"
+   echo '      export "PATH=$ROOTSYS/bin:$PATH" '
+   echo "      R CMD INSTALL ${R_PACKAGE_NAME}"
+   echo ""
+   echo "   Please consult the README file for more information"
+   echo ""
+   exit 1
+else
+   echo "found ROOT version `root-config --version` in directory `root-config --prefix`"
+fi
+
+exit 0

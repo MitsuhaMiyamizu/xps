@@ -1,0 +1,101 @@
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+The package handles the pre-processing and normalization of Affymetrix 
+GeneChip expression arrays, including Exon arrays. It is an R wrapper
+to XPS (eXpression Profiling System), which is based on ROOT, an object-
+oriented framework developed at CERN. Thus, the prior installation of
+ROOT is a prerequisite for the usage of this package. ROOT can be
+downloaded from http://root.cern.ch. 
+
+Copyright (C) 2000-2017 Christian Stratowa, Vienna, Austria
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, a copy of the GNU General Public
+License is available at http://www.gnu.org/copyleft/gpl.html. You
+can also obtain it by writing to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA.
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+Please read the INSTALL file how to install ROOT and package 'xps'
+
+The contents of the INSTALL file are:
+
+I.   Install ROOT:
+ Ia.  Install ROOT from source
+ Ib.  Install ROOT for Mac OS X
+ Ic.  Install ROOT for Mac OS X Mavericks and Yosemite
+ Id.  Install ROOT for Mac OS Sierra
+ Ie.  Install ROOT for Mac OS El Capitan
+ If.  Install ROOT for Windows XP, Vista, and Windows 7
+ Ig.  Notes on  ROOT
+II.  Install package 'xps':
+ IIa.  Install 'xps' from source
+ IIb.  Install 'xps' as binary
+ IIc.  Install 'xps' for Windows XP, Vista, and Windows 7
+ IId.  Tested architectures
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+Learning how to use package 'xps'
+
+   The best way to learn how to use package 'xps' is to follow the examples
+   in the enclosed vignette "An Introduction to the xps Package".
+
+   As next step it is recommeded to follow the step-by-step examples in the
+   script "script4xps.R", which is available in the "examples" subdirectory of
+   'xps'. Directory xps/raw contains four CEL-files for chip Test3.CDF, which
+   are used in most of the examples. However, real world examples in this script
+   include a subset of the Affymetrix Exon Array Dataset human Tissues for  
+   HG-U133_Plus_2 arrays, HuEx-1_0-st-v2 arrays and HuGene-1_0-st-v1 arrays.
+   The corresponding CEL-files must be downloaded from the Affymetrix web site.
+
+   The use of Affymetrix human Tissues dataset is also explained in more detail
+   in the example script "script4exon.R".
+   
+   Note:
+   Please note that the new ThermoFisher Scientic Clariom Arrays, such as the
+   human HTA 2.0, mouse MTA 1.0, and rat HT arrays are NOT supported.
+    
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+Comments regarding the tested architectures:
+
+   1. MacBook Pro Intel Core 2 Duo 2GHz with 2 GB RAM running MacOS X 10.6.6
+      All examples were tested, including the Affymetrix human mixture
+      dataset for HG-U133_Plus_2, HuGene-1_0-st-v1 AND HuEx-1_0-st-v2.r2
+
+   2. PowerBook Titanium PowerPC G4 550MHz with 1 GB RAM running MacOS X 10.4.9
+      Most examples were tested, including the Affymetrix human mixture
+      dataset for HG-U133_Plus_2 (HuEx-1_0-st-v2.r2 should also run, as
+      I have tested them earlier, but they are very slow on G4 550 MHz)
+
+   3. HP Compaq nx6110 Intel Centrino 1.4 GHz with 512 MB RAM with Fedora Core 4
+      All examples were tested, including the Affymetrix human mixture
+      dataset for HG-U133_Plus_2  but NOT HuEx-1_0-st-v2.r2.
+
+   4. HP Compaq nx6110 Intel Centrino 1.4 GHz with 512 MB RAM with Windows XP
+      Most examples were tested, including the Affymetrix human mixture
+      dataset for HG-U133_Plus_2,  HuGene-1_0-st-v1 AND HuEx-1_0-st-v2.r2.
+      Note: I could indeed run RMA using 6 exon arrays of the Affmetrix dataset
+            with only 512 MB of RAM. However, it may not be possible to run MAS5,
+            since the MAS5 background correction uses lots of RAM.
+            Furthermore, it was not possible to create the scheme for the exon
+            arrays with "import.exon.scheme()", since the Affymetrix files are
+            too large; you need at least 1GB RAM.
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

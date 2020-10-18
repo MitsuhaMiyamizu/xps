@@ -1,0 +1,150 @@
+#------------------------------------------------------------------------------
+# Makefile.win was adapted for ROOT compiled with MinGW by Alexey Lebedev
+# Makefile.win for compilation with VC++ 2010 is renamed to Makefile.vc10.win
+#------------------------------------------------------------------------------
+
+#CL            = "${MSVSPATH}/cl"
+#LINK          = "${MSVSPATH}/link"
+
+ROOTSYS_UNIX=$(shell echo "$(ROOTSYS)" | sed -e 's/\\/\//g')
+
+CL = g++ -pipe -mwindows 
+LINK = g++
+
+#check for libGraf setting
+ifneq ($(findstring _G__cpp_setupG__Graf1, ${ROOTSYS_UNIX}/bin/root-config),)
+WHICHGRAF =_G__cpp_setupG__Graf1
+else
+WHICHGRAF =_G__cpp_setupG__Graf
+endif
+
+#LDOPT         = -opt:ref
+LDOPT         = -opt:noref
+LDOPT=
+
+LDFLAGS       = $(LDOPT) $(conlflags) -nologo -include:_G__cpp_setupG__Hist \
+				-include:$(WHICHGRAF) -include:_G__cpp_setupG__G3D \
+				-include:_G__cpp_setupG__GPad -include:_G__cpp_setupG__Tree \
+				-include:_G__cpp_setupG__Rint -include:_G__cpp_setupG__PostScript \
+				-include:_G__cpp_setupG__Matrix -include:_G__cpp_setupG__Physics \
+				-include:_G__cpp_setupG__Ged 
+LDFLAGS=
+SOFLAGS       = $(dlllflags:-pdb:none=)
+SOFLAGS= -mwindows -Wl,--subsystem,windows -Wl,--dll -shared
+
+ROOTLIBS      = "${ROOTSYS_UNIX}/lib/libCore.lib" \
+				"${ROOTSYS_UNIX}/lib/libCint.lib" "${ROOTSYS_UNIX}/lib/libHist.lib" \
+				"${ROOTSYS_UNIX}/lib/libGraf.lib" "${ROOTSYS_UNIX}/lib/libGraf3d.lib" \
+				"${ROOTSYS_UNIX}/lib/libGpad.lib" "${ROOTSYS_UNIX}/lib/libTree.lib" \
+				"${ROOTSYS_UNIX}/lib/libRint.lib" "${ROOTSYS_UNIX}/lib/libPostscript.lib" \
+				"${ROOTSYS_UNIX}/lib/libMatrix.lib" "${ROOTSYS_UNIX}/lib/libPhysics.lib" \
+				"$(ROOTSYS_UNIX)/lib/libNet.lib" "$(ROOTSYS_UNIX)/lib/libRIO.lib" \
+				"$(ROOTSYS_UNIX)/lib/libMathCore.lib"
+LIBS          = $(ROOTLIBS)
+GLIBS         = $(LIBS) "${ROOTSYS_UNIX}/lib/libGui.lib" "${ROOTSYS_UNIX}/lib/libGraf.lib" \
+				"${ROOTSYS_UNIX}/lib/libGpad.lib" "${ROOTSYS_UNIX}/lib/libGed.lib" \
+				"${ROOTSYS_UNIX}/lib/libTreePlayer.lib" "${ROOTSYS_UNIX}/lib/libTreeViewer.lib"
+LIBSALL       = $(ROOTLIBS)
+
+#------------------------------------------------------------------------------
+
+MYHDR       = TMLMath.h TStat.h StatUtils.h \
+			  XPSBase.h XPSUtils.h \
+			  XPSSchemes.h \
+			  XPSDataTypes.h XPSProjectHandler.h XPSData.h \
+			  XPSProcessing.h XPSHybridizer.h XPSSelector.h XPSNormalizer.h XPSPreProcessing.h XPSNormation.h \
+			  XPSFilter.h XPSAnalyzer.h XPSAnalysis.h \
+			  rwrapper.h
+MYSRC       = TMLMath.cxx TStat.cxx StatUtils.cxx \
+			  XPSBase.cxx XPSUtils.cxx \
+			  XPSSchemes.cxx \
+			  XPSDataTypes.cxx XPSProjectHandler.cxx XPSData.cxx \
+			  XPSProcessing.cxx XPSHybridizer.cxx XPSSelector.cxx XPSNormalizer.cxx XPSPreProcessing.cxx XPSNormation.cxx \
+			  XPSFilter.cxx XPSAnalyzer.cxx XPSAnalysis.cxx \
+			  rwrapper.cxx
+MYOBJ       = TMLMath.o TStat.o StatUtils.o \
+			  XPSBase.o XPSUtils.o \
+			  XPSSchemes.o \
+			  XPSDataTypes.o XPSProjectHandler.o XPSData.o \
+			  XPSProcessing.o XPSHybridizer.o XPSSelector.o XPSNormalizer.o XPSPreProcessing.o XPSNormation.o \
+			  XPSFilter.o XPSAnalyzer.o XPSAnalysis.o \
+			  rwrapper.o xpsDict.o
+
+
+xps.dll:  $(MYOBJ)
+	$(LINK) -o xps.dll $(SOFLAGS) $(LDFLAGS) *.o $(GLIBS)
+	
+TMLMath.o: TMLMath.h TMLMath.cxx
+	$(CL) -I${ROOTSYS_UNIX}/include -include w32pragma.h -O2 -DWIN32 -c TMLMath.cxx
+
+TStat.o: TStat.h TStat.cxx
+	$(CL) -I${ROOTSYS_UNIX}/include -FIw32pragma.h   -O3 -DWIN32 -c TStat.cxx
+	
+StatUtils.o: StatUtils.h StatUtils.cxx
+	$(CL) -I${ROOTSYS_UNIX}/include -FIw32pragma.h   -O3 -DWIN32 -c StatUtils.cxx
+	
+XPSBase.o: XPSBase.h XPSBase.cxx
+	$(CL) -I${ROOTSYS_UNIX}/include -FIw32pragma.h   -O3 -DWIN32 -c XPSBase.cxx
+
+XPSUtils.o: XPSUtils.h XPSUtils.cxx
+	$(CL) -I${ROOTSYS_UNIX}/include -FIw32pragma.h   -O3 -DWIN32 -c XPSUtils.cxx
+	
+XPSSchemes.o: XPSSchemes.h XPSSchemes.cxx
+	$(CL) -I${ROOTSYS_UNIX}/include -FIw32pragma.h   -O3 -DWIN32 -c XPSSchemes.cxx
+	
+XPSDataTypes.o: XPSDataTypes.h XPSDataTypes.cxx
+	$(CL) -I${ROOTSYS_UNIX}/include -FIw32pragma.h   -O3 -DWIN32 -c XPSDataTypes.cxx
+
+XPSProjectHandler.o: XPSProjectHandler.h XPSProjectHandler.cxx
+	$(CL) -I${ROOTSYS_UNIX}/include -FIw32pragma.h   -O3 -DWIN32 -c XPSProjectHandler.cxx
+	
+XPSData.o: XPSData.h XPSData.cxx
+	$(CL) -I${ROOTSYS_UNIX}/include -FIw32pragma.h   -O3 -DWIN32 -c XPSData.cxx
+	
+XPSProcessing.o: XPSProcessing.h XPSProcessing.cxx
+	$(CL) -I${ROOTSYS_UNIX}/include -FIw32pragma.h   -O3 -DWIN32 -c XPSProcessing.cxx
+
+XPSHybridizer.o: XPSHybridizer.h XPSHybridizer.cxx
+	$(CL) -I${ROOTSYS_UNIX}/include -FIw32pragma.h   -O3 -DWIN32 -c XPSHybridizer.cxx
+	
+XPSSelector.o: XPSSelector.h XPSSelector.cxx
+	$(CL) -I${ROOTSYS_UNIX}/include -FIw32pragma.h   -O3 -DWIN32 -c XPSSelector.cxx
+	
+XPSNormalizer.o: XPSNormalizer.h XPSNormalizer.cxx
+	$(CL) -I${ROOTSYS_UNIX}/include -FIw32pragma.h   -O3 -DWIN32 -c XPSNormalizer.cxx
+
+XPSPreProcessing.o: XPSPreProcessing.h XPSPreProcessing.cxx
+	$(CL) -I${ROOTSYS_UNIX}/include -FIw32pragma.h   -O3 -DWIN32 -c XPSPreProcessing.cxx
+	
+XPSNormation.o: XPSNormation.h XPSNormation.cxx
+	$(CL) -I${ROOTSYS_UNIX}/include -FIw32pragma.h   -O3 -DWIN32 -c XPSNormation.cxx
+	
+XPSFilter.o: XPSFilter.h XPSFilter.cxx
+	$(CL) -I${ROOTSYS_UNIX}/include -FIw32pragma.h   -O3 -DWIN32 -c XPSFilter.cxx
+
+XPSAnalyzer.o: XPSAnalyzer.h XPSAnalyzer.cxx
+	$(CL) -I${ROOTSYS_UNIX}/include -FIw32pragma.h   -O3 -DWIN32 -c XPSAnalyzer.cxx
+	
+XPSAnalysis.o: XPSAnalysis.h XPSAnalysis.cxx
+	$(CL) -I${ROOTSYS_UNIX}/include -FIw32pragma.h   -O3 -DWIN32 -c XPSAnalysis.cxx
+
+rwrapper.o: rwrapper.h rwrapper.cxx
+	$(CL) -I${ROOTSYS_UNIX}/include -FIw32pragma.h   -O3 -DWIN32 -c rwrapper.cxx
+	
+xpsDict.cxx: $(MYHDR) xpsLinkDef.h
+	@echo "Generating dictionary $@..."
+	#@rootcint -f $@ -c $(MYHDR) xpsLinkDef.h
+	@$(ROOTSYS_UNIX)/bin/rootcint -f $@ -c $(MYHDR) xpsLinkDef.h
+
+	
+xpsDict.o: xpsDict.cxx xpsDict.h
+	$(CL) -I${ROOTSYS_UNIX}/include -include w32pragma.h -O3 -DWIN32 -c xpsDict.cxx
+
+clean:
+#	rm -f $(MYOBJ) *.a *.d *.rc 
+	rm -f $(MYOBJ) *.a *.d *.rc xpsDict.*
+
+clobber:
+	rm -f $(RLIB) $(MYOBJ) *.a *.d *.rc *.dll 
+
+

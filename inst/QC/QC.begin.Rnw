@@ -1,0 +1,38 @@
+\documentclass{article}
+
+
+\textwidth=6.2in
+\textheight=8.5in
+%\parskip=.3cm
+\oddsidemargin=.1in
+\evensidemargin=.1in
+\headheight=-.3in
+
+\newcommand{\Rfunction}[1]{{\texttt{#1}}}
+\newcommand{\Rmethod}[1]{{\texttt{#1}}}
+\newcommand{\Rcode}[1]{{\texttt{#1}}}
+\newcommand{\Robject}[1]{{\texttt{#1}}}
+\newcommand{\Rpackage}[1]{{\textsf{#1}}}
+\newcommand{\Rclass}[1]{{\textit{#1}}}
+\newcommand{\Cclass}[1]{{\textit{#1}}}
+\newcommand{\Rexten}[1]{{\textit{#1}}}
+\newcommand{\xps}{\Rpackage{xps}}
+\newcommand{\ROOT}{\Robject{ROOT}}
+
+\begin{document}
+
+\title{@TITLE@}
+\date{@DATE@}
+\author{@AUTHOR@}
+\maketitle
+
+\tableofcontents
+
+
+\section{Introduction}
+
+ This is the quality assessment report for the dataset '@DATASET@'. The dataset consists of
+ @NUMTREES@ Affymetrix @CHIPTYPE@ arrays of type '@CHIPNAME@'. \\
+
+ This report was generated using function \Rfunction{xpsQAReport} of package \xps. \\
+

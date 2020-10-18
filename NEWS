@@ -1,0 +1,281 @@
+CHANGES IN VERSION 1.41
+-----------------------
+
+    o update NEWS file
+
+CHANGES IN VERSION 1.39
+-----------------------
+
+    o XPSData.h - correct selassignment
+
+CHANGES IN VERSION 1.37
+-----------------------
+
+    o configure.in file - unix line endings
+    o update INSTALL and README file
+
+CHANGES IN VERSION 1.35
+-----------------------
+
+    o eliminate dependency on ROOTSYS
+    o update configure.in file
+    o update Makefile.arch to add ROOTSYS an  update -rpath 
+    o eliminate dependency on DYLD_LIBRARY_PATH and LD_LIBRARY_PATH
+    o update configure.in file
+    o update Makefile.arch to use -rpath with ld
+    o update Makefile for MacOS Sierra
+    o update README file
+    o update import in NAMESPACE
+
+CHANGES IN VERSION 1.29
+-----------------------
+
+    o update README file
+
+CHANGES IN VERSION 1.27
+-----------------------
+
+    o add SystemRequirements GNU make
+
+CHANGES IN VERSION 1.25
+-----------------------
+
+    o update XPSPreProcessing.cxx to reset mask to initial values for each array (necessary for whole genome/exon arrays)
+    o update XPSPreProcessing.cxx to remove -Wsequence-point warning for numsels = ++numsels
+
+CHANGES IN VERSION 1.23
+-----------------------
+
+    o add type CNRTYPE to image() and hist()
+
+CHANGES IN VERSION 1.21
+-----------------------
+
+    o add QualTreeSet methods NUSE() and RLE() to get stats and values
+    o update man export.Rd
+    o update xpsQAReport.R for R-3.x
+    o update XPSSchemes.cxx to replace error with warning for missing annotation header '%netaffx-annotation-'
+    o update XPSNormalizer.cxx to correct for uninitialized variables
+    o update README
+    o update Makefile to set include path (for ~/.R/Makevars)
+    o update XPSUtils.cxx to eliminate warning with clang
+
+CHANGES IN VERSION 1.19
+-----------------------
+
+    o update XPSSchemes.cxx to correct possible memory error in TString array names[i]
+    o update README
+    o replace .path.package() with path.package()
+    o update XPSSchemes.cxx to replace error with warning for missing annotation header '%genome-species'
+    o update configure.win and Makefile.win for ROOT compiled with MinGW; xps works now on Windows 7
+    o update Import..Annotation() methods in XPSchemes.cxx to protect against tabs in Affymetrix annotation files
+    o update script4schemes.R to include schemes with annotation na33
+
+CHANGES IN VERSION 1.17
+-----------------------
+
+    o update script4schemes.R to include schemes for HuGene-2_x-st arrays
+    o update script4xps.R with example 4a for HuGene-2_1-st arrays
+    o update README
+    o remove warnings: partial argument match
+    o zzz.R: use .onAttach()
+
+CHANGES IN VERSION 1.15
+-----------------------
+
+    o move to ROOT CHANGES IN VERSION 5.32/01, update README
+    o update zzz.R
+
+CHANGES IN VERSION 1.13
+-----------------------
+
+    o update function xpsQAReport() to replace "_" with "\_" for *.Rnw
+    o add quality report function xpsQAReport()
+    o update vignette xps.Rnw
+    o add functions attachProbe(), removeProbe(), etc.
+    o add functions contentGC(), probeSequence()
+    o add functions inten2GCplot(), plotInten2GC()
+    o update vignette xps.Rnw
+    o add function unitID2symbol()
+    o add function plotProbeset()
+    o update vignette xps.Rnw
+    o update function indexUnits() for exon probesets
+    o add function symbol2unitID()
+    o add function probesetplot()
+    o update script4schemes.R to include schemes with annotation na32
+    o update script4xps.R and script4exon.R
+    o move to ROOT CHANGES IN VERSION 5.30/00, update README
+    o update vignettes xps.Rnw and xpsClasses.Rnw
+    o correct problem in unitID2affyID() on Linux caused by sQuote()
+    o add functions plotXXX()
+    o function hist() no longer requires to attachInten()
+    o add functions indexUnits(), pmindex(), mmindex()
+    o add functions probesetID2unitID(), unitID2probesetID(), etc
+    o add functions attachUnitNames(), removeUnitNames()
+    o add functions attachDataXY(), removeDataXY()
+    o update function plotImage() to draw background images
+
+CHANGES IN VERSION 1.11
+-----------------------
+
+    o update functions: plotBoxplot(), plotAffyRNAdeg()
+    o update functions: plotImage(), plotAffyRNAdeg()
+    o add functions: plotImage(), plotBoxplot()
+    o update methods image()
+    o add method: pcaplot()
+    o update method plotAffyRNAdeg()
+    o add methods: corplot(), madplot()
+    o update method plotAffyRNAdeg()
+    o add methods for RNA degradation plots: xpsRNAdeg(), plotAffyRNAdeg()
+    o add man pages
+    o correct minor bug in XPSProcessing.cxx: ExportExprTreeInfo()
+    o update method image()
+    o add man pages
+    o add new class QualTreeSet to add quality control features
+    o add functions qualify() and fitQC() and derived functions
+    o add method image() for residual plots of IVT, Gene ST, Exon ST and plate arrays
+    o add new plots coiplot() and borderplot()
+    o update boxplot(), callplot(), image() to be independent of slot 'data'
+    o add function trma()
+    o update DESCRIPTION to correct SystemRequirements to root_v5.27.04
+    o update function READ_WSTRING() to handle big endian for PPC
+
+CHANGES IN VERSION 1.9
+----------------------
+
+    o update method XExonChip::ProbesetLevel() for whole genome annotation na31 files
+    o	revert update of Makefile.win
+    o	update Makefile.win to clean xpsLinkDef.h
+    o	update script4schemes.R for annotation na31 (updated release)
+    o	update information files for new ROOT CHANGES IN VERSION 5.27/04 (root_v5.27/04)
+    o	update script4xps.R, script4schemes.R for annotation na31
+    o	update import.data to use make.names(celnames) to protect against certain characters
+    o	update root.profile.R, macroDrawProfilePlot.C to allow selecting subset of trees
+    o	in read.table() set stringsAsFactors=FALSE
+    o	update method XPreFilter::Calculate() to handle exon arrays correctly
+    o	update Makefile and Makefile.arch
+    o	add support in XPSAnalysis.cxx to export exon array probeset annotations (filters)
+
+CHANGES IN VERSION 1.7
+----------------------
+
+    o	update method validData() to handle slot data containing different column types
+    o	update methods seExprTreeSet(), rleplot(), mvaplot(), nuseplot()
+    o	add method xpsFIRMA()
+    o	add functions firma(), firma.expr(), firma.score()
+    o	update bgcorrect.R to warn from using tmpdir resulting in empty root file
+    o	update normalize.R to warn from using tmpdir resulting in empty root file
+    o	minor change to allow computation with g++ 4.4.x
+    o	add NEWS
+    o	add ExprTreeSet methods validSE(), nuseplot(), rleplot()
+    o	allow to export layout trees for incomplete *.CLF files
+    o	update examples/updateAnnotation.R
+    o	add examples/updateAnnotation.R
+    o update script4xps.R
+    o allow using mas5() and mas5.call() with plate arrays w/o MMs
+    o update script4xps.R
+
+CHANGES IN VERSION 1.5
+----------------------
+
+    o update script4xps.R
+    o add parameter bgcorrect.option to function mas5.call()
+    o	update README 
+    o allow handling of probesets w/o MMs on Citrus.CDF
+    o validBgrd() implement 'which'
+    o add vignette xpsPreprocess.pdf
+    o add example/macro4xpsPreprocess.R
+    o update export() to include read.table(..,comment.char='')
+    o update methods.DataTreeSet.R to allow probe-level lowess and supsmu normalization
+    o update express() to allow setting bufsize for tree baskets
+    o	changes to allow import of miRNA-1_0.CDF
+    o update validOption() to allow 'separate:none'
+    o update rma() to allow improved ties handling as option like preprocessCore
+    o	update method validCall() 
+    o	add methods validExpr() and validPVal()
+    o	update vignette APTvsXPS.pdf
+    o	update examples script4xps2apt.R and script4bestmatch.R
+    o	update function exonLevel() to use affx=c(4,8,16,32)
+    o	update function dataDataTreeSet() to return correct ids for mask
+    o	add new internal function exonLevelIDs()
+    o update help file exonLevel.Rd
+    o update validData() to check for duplicate rownames
+    o allow reading of genetitan plate data
+
+CHANGES IN VERSION 1.3.13
+----------------------
+
+    o update DESCRIPTION to mention root CHANGES IN VERSION
+    o update README
+    o correct bug in implementation of FDR and Hochberg
+    o make function exonLevel public and add exonLevel.Rd
+    o update all initialize methods to prevent checkS3forClass warnings
+    o update bgcorrect.rma, bgcorrect.mas5
+    o update script4xps.R, script4exon.R
+    o support using genome array as exon arrays
+    o add code in function import.data() to replace dots, colons in celnames with underscores
+    o correct bug in xpsPreprocess for add.data=FALSE
+    o correct sub(.root, .txt, x) to sub(\.root, .txt, x)
+    o update root.image() to get setname from setName()
+    o change intensity<- to allow using slot data for further processing
+    o add function root.merge.data()
+    o protect class XRMABackground against defect Affy chips, e.g. zero division
+    o protect root.data() etc against duplicate celnames or treenames
+
+CHANGES IN VERSION 1.1
+----------------------
+
+    o correct bug in class XINICall resulting in buffer overflow
+    o add call method I/NI-call (Talloen et al)
+    o prevent import of CEL-files with zero max intensity
+    o update functions returning ExprTreeSet to import results as option only
+    o update functions returning CallTreeSet to import results as option only
+    o update root.density etc to allow saving from R function
+    o add root.profile to use root graphics for boxplots
+    o add summarization method FARMS (Hochreiter et al)
+    o add summarization method DFW (Chen et al)
+    o update vignette xps.pdf
+    o correct problem in validData for CEL-files starting with numbers
+    o update vignette xps.pdf
+    o add new vignette APTvsXPS.pdf
+    o update examples script4exon.R
+    o add examples script4xps2apt.R and script4bestmatch.R
+    o update README
+    o to allow CEL-names starting with a number, update to read.table(..., check.names=FALSE)
+    o update ExprTreeSet to set slot exprtype to correct type
+    o add functions root.expr() and root.call()
+    o need to change setname for dabg.call() from CallTreeSet to CallSet as for mas5.call()
+    o allow different exonlevels for bgrd, normalization, summarization
+    o update replacement methods exprs, pvalData, presCall to allow subsetting
+    o add function metaProbesets to compute metacoreList.mps for apt
+    o increase maximum root file size from 2GB to 2TB
+    o decrease computation time
+    o correct bug preventing export of exon probeset normalized data
+
+CHANGES IN VERSION 0.99
+-----------------------
+
+    o correct bug resulting in empty exon probeset column
+    o update source code to handle tmpdir correctly on WinXP
+    o update examples script4xps.R and script4exon.R
+    o update methods namePart, extenPart, validData, validBgrd to handle names with underscores
+    o update functions root.xxx to work with WinXP
+    o package can now be built for Windows XP
+    o added possibility to add current date and/or time to root filename
+    o added function existsROOTFile
+    o updated vignette xps.Snw
+
+CHANGES IN VERSION 0.4
+----------------------
+
+    o new method rawCELName() to get the names of the imported CEL-files
+    o add support to import generic (calvin) CEL-files
+    o update method volcanoplot
+    o change DESCRIPTION
+    o add method volcanoplot
+    o correct update bug in xpsUniFilter
+    o import.data: import CEL-files from different directories
+    o update DESCRIPTION, NAMESPACE
+    o add possibility to apply non-sepcific filters and univariate filters
+    o add S4 classes Filter, PreFilter, UniFilter
+    o add S4 classes FilterTreeSet and AnalysisTreeSet 
